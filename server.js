@@ -111,13 +111,161 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// Protect all other /api/* routes
+// Protect all other /api/* routes (except OAuth callback which validates its own state)
 app.use('/api', (req, res, next) => {
-  if (req.path.startsWith('/auth/')) return next();
+  if (req.path.startsWith('/auth/') || req.path.startsWith('/oauth/callback/')) return next();
   if (!isAuthenticated(req)) {
     return res.status(401).json({ ok: false, error: 'נדרשת התחברות.' });
   }
   next();
+});
+
+// ==================== WEB OAUTH (1-CLICK LOGIN ON RENDER) ====================
+const oauthStates = new Map(); // state -> { provider, redirectUri, expiresAt }
+
+function getOAuthConfig(provider) {
+  if (provider === 'drive') {
+    const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+    if (!clientId || !clientSecret) return null;
+    return {
+      clientId,
+      clientSecret,
+      authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenUrl: 'https://oauth2.googleapis.com/token',
+      extraAuthParams: {
+        scope: 'https://www.googleapis.com/auth/drive',
+        access_type: 'offline',
+        prompt: 'consent'
+      }
+    };
+  }
+  if (provider === 'dropbox') {
+    const clientId = (process.env.DROPBOX_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.DROPBOX_CLIENT_SECRET || '').trim();
+    if (!clientId || !clientSecret) return null;
+    return {
+      clientId,
+      clientSecret,
+      authUrl: 'https://www.dropbox.com/oauth2/authorize',
+      tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
+      extraAuthParams: {
+        token_access_type: 'offline'
+      }
+    };
+  }
+  if (provider === 'onedrive') {
+    const clientId = (process.env.ONEDRIVE_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.ONEDRIVE_CLIENT_SECRET || '').trim();
+    if (!clientId || !clientSecret) return null;
+    return {
+      clientId,
+      clientSecret,
+      authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      extraAuthParams: {
+        scope: 'Files.ReadWrite.All offline_access User.Read'
+      }
+    };
+  }
+  return null;
+}
+
+function getBaseUrl(req) {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  return `${String(proto).split(',')[0].trim()}://${req.get('host')}`;
+}
+
+app.get('/api/oauth/start/:provider', (req, res) => {
+  const provider = req.params.provider;
+  const cfg = getOAuthConfig(provider);
+  if (!cfg) {
+    return res.status(400).send(`OAuth is not configured for ${provider}. Set the CLIENT_ID and CLIENT_SECRET env vars in Render.`);
+  }
+  const state = crypto.randomBytes(24).toString('hex');
+  const redirectUri = `${getBaseUrl(req)}/api/oauth/callback/${provider}`;
+  oauthStates.set(state, { provider, redirectUri, expiresAt: Date.now() + 10 * 60 * 1000 });
+
+  const params = new URLSearchParams({
+    client_id: cfg.clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    state,
+    ...cfg.extraAuthParams
+  });
+  res.redirect(`${cfg.authUrl}?${params.toString()}`);
+});
+
+app.get('/api/oauth/callback/:provider', async (req, res) => {
+  const provider = req.params.provider;
+  const { code, state, error, error_description } = req.query;
+
+  if (error) {
+    return res.redirect(`/?oauthError=${encodeURIComponent(error_description || error)}`);
+  }
+  const saved = oauthStates.get(state);
+  oauthStates.delete(state);
+  if (!saved || saved.provider !== provider || Date.now() > saved.expiresAt || !code) {
+    return res.redirect(`/?oauthError=${encodeURIComponent('פג תוקף בקשת ההתחברות. נסה שוב.')}`);
+  }
+
+  const cfg = getOAuthConfig(provider);
+  if (!cfg) {
+    return res.redirect(`/?oauthError=${encodeURIComponent('הגדרות OAuth חסרות בשרת.')}`);
+  }
+
+  try {
+    const body = new URLSearchParams({
+      code: String(code),
+      client_id: cfg.clientId,
+      client_secret: cfg.clientSecret,
+      redirect_uri: saved.redirectUri,
+      grant_type: 'authorization_code'
+    });
+
+    const tokenRes = await fetch(cfg.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.access_token) {
+      throw new Error(tokenData.error_description || tokenData.error || 'קבלת הטוקן נכשלה');
+    }
+
+    const expiry = new Date(Date.now() + (Number(tokenData.expires_in) || 3600) * 1000).toISOString();
+    const rcloneToken = JSON.stringify({
+      access_token: tokenData.access_token,
+      token_type: tokenData.token_type || 'Bearer',
+      refresh_token: tokenData.refresh_token || '',
+      expiry
+    });
+
+    const allowed = { drive: 'google', onedrive: 'onedrive', dropbox: 'dropbox' };
+    const existing = await listUserRemotes();
+    const existingNames = new Set(existing.map(r => r.name.toLowerCase()));
+    let idx = 1;
+    while (existingNames.has(`${allowed[provider]}_${idx}`)) idx++;
+    const name = `${allowed[provider]}_${idx}`;
+
+    const createArgs = [
+      'config', 'create', name, provider,
+      `client_id=${cfg.clientId}`,
+      `client_secret=${cfg.clientSecret}`,
+      `token=${rcloneToken}`,
+      '--non-interactive'
+    ];
+    if (provider === 'onedrive') {
+      createArgs.push('config_type=onedrive');
+    }
+    await runRclone(createArgs, 30000);
+    await rebuildUnion();
+
+    res.redirect(`/?connected=${encodeURIComponent(name)}`);
+  } catch (err) {
+    console.error('Web OAuth callback error:', err);
+    res.redirect(`/?oauthError=${encodeURIComponent(err.message)}`);
+  }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -270,6 +418,11 @@ app.get('/api/status', async (req, res) => {
       ok: true,
       isWindows: IS_WINDOWS,
       authRequired: Boolean(CLOUD_PASSWORD),
+      webOAuth: {
+        drive: Boolean(getOAuthConfig('drive')),
+        dropbox: Boolean(getOAuthConfig('dropbox')),
+        onedrive: Boolean(getOAuthConfig('onedrive'))
+      },
       remotes,
       winfspInstalled: IS_WINDOWS ? isWinFspInstalled() : false,
       mounted: Boolean(mountProcess),
