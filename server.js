@@ -460,6 +460,75 @@ app.post('/api/accounts/cancel-auth', (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/accounts/add-token', async (req, res) => {
+  try {
+    const { provider, token, customName } = req.body || {};
+    const allowed = { drive: 'google', onedrive: 'onedrive', dropbox: 'dropbox' };
+    if (!allowed[provider]) {
+      return res.status(400).json({ ok: false, error: 'ספק לא נתמך. בחר drive, onedrive או dropbox.' });
+    }
+    const rawToken = String(token || '').trim();
+    let tokenJson = rawToken;
+    // Allow pasting full rclone authorize output or raw JSON
+    const pasteMatch = rawToken.match(/--->\s*(\{[\s\S]*?\})\s*<---End paste/);
+    if (pasteMatch) {
+      tokenJson = pasteMatch[1].trim();
+    } else {
+      const jsonMatch = rawToken.match(/(\{[\s\S]*"access_token"[\s\S]*\})/);
+      if (jsonMatch) tokenJson = jsonMatch[1].trim();
+    }
+    try {
+      const parsed = JSON.parse(tokenJson);
+      if (!parsed.access_token) throw new Error('missing access_token');
+    } catch {
+      return res.status(400).json({ ok: false, error: 'הטוקן לא תקין. הדבק את הטוקן JSON שהתקבל מ-rclone authorize.' });
+    }
+
+    const existing = await listUserRemotes();
+    const existingNames = new Set(existing.map(r => r.name.toLowerCase()));
+    let name = '';
+    if (customName && customName.trim()) {
+      name = customName.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      if (!name || name.toLowerCase() === UNION_NAME || existingNames.has(name.toLowerCase())) {
+        return res.status(400).json({ ok: false, error: 'שם חשבון לא חוקי או כבר קיים.' });
+      }
+    } else {
+      let idx = 1;
+      while (existingNames.has(`${allowed[provider]}_${idx}`)) idx++;
+      name = `${allowed[provider]}_${idx}`;
+    }
+
+    const createArgs = ['config', 'create', name, provider, `token=${tokenJson}`, '--non-interactive'];
+    if (provider === 'onedrive') {
+      createArgs.push('config_type=onedrive');
+    }
+    await runRclone(createArgs, 30000);
+    await rebuildUnion();
+
+    res.json({ ok: true, name, provider });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/accounts/export-base64', async (req, res) => {
+  try {
+    let confFile = rcloneConfigPath;
+    if (!confFile) {
+      const { stdout } = await runRclone(['config', 'file'], 10000);
+      const lines = stdout.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      confFile = lines[lines.length - 1];
+    }
+    if (!confFile || !fs.existsSync(confFile)) {
+      return res.status(404).json({ ok: false, error: 'קובץ rclone.conf לא נמצא.' });
+    }
+    const b64 = fs.readFileSync(confFile).toString('base64');
+    res.json({ ok: true, base64: b64 });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.delete('/api/accounts/:name', async (req, res) => {
   try {
     const name = req.params.name;
