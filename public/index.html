@@ -1058,8 +1058,12 @@
     async function startAddAccount(provider) {
       const labels = { drive: 'Google Drive', onedrive: 'Microsoft OneDrive', dropbox: 'Dropbox' };
 
-      // On cloud server (Linux/Render), use the Token modal flow
+      // On cloud server (Linux/Render): use 1-click Web OAuth if configured, otherwise Token modal
       if (!appStatus.isWindows) {
+        if (appStatus.webOAuth && appStatus.webOAuth[provider]) {
+          window.location.href = `/api/oauth/start/${encodeURIComponent(provider)}`;
+          return;
+        }
         pendingTokenProvider = provider;
         document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider]} חדש`;
         document.getElementById('tokenCmdBox').textContent = `rclone authorize "${provider}"`;
@@ -1210,6 +1214,13 @@
     }
 
     async function initApp() {
+      const qs = new URLSearchParams(window.location.search);
+      const connected = qs.get('connected');
+      const oauthError = qs.get('oauthError');
+      if (connected || oauthError) {
+        history.replaceState({}, '', window.location.pathname);
+      }
+
       try {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
@@ -1219,7 +1230,13 @@
           return;
         }
       } catch (_) {}
-      refreshAll();
+
+      await refreshAll();
+      if (connected) {
+        toast(`החשבון ${connected} חובר בהצלחה! לחץ "💾 העתק קונפיג לשמירה ב-Render" כדי לשמור קבוע.`, 'success');
+      } else if (oauthError) {
+        toast('שגיאה בהתחברות: ' + oauthError, 'error');
+      }
     }
 
     // Init
