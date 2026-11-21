@@ -540,6 +540,7 @@
         <button class="btn-secondary btn-sm" onclick="startAddAccount('drive')">➕ חבר Google Drive (15GB)</button>
         <button class="btn-secondary btn-sm" onclick="startAddAccount('onedrive')">➕ חבר Microsoft OneDrive (5GB)</button>
         <button class="btn-secondary btn-sm" onclick="startAddAccount('dropbox')">➕ חבר Dropbox (2GB)</button>
+        <button class="btn-secondary btn-sm" id="btnExportConfig" style="display:none; border-color:var(--sky); color:var(--sky);" onclick="exportConfigBase64()">💾 העתק קונפיג לשמירה ב-Render</button>
       </div>
     </div>
 
@@ -609,6 +610,28 @@
         <button class="btn-danger btn-sm" onclick="cancelAuth()">ביטול</button>
       </div>
     </div>
+  </div>
+
+  <!-- Add Account by Token Modal (for Render / Cloud Server) -->
+  <div class="modal-backdrop" id="tokenModal" onclick="if(event.target===this) closeTokenModal()">
+    <form class="modal" onsubmit="submitTokenAccount(event)">
+      <div class="modal-header">
+        <h3 id="tokenModalTitle">חבר חשבון חדש</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+        1. הרץ במחשב שלך את הפקודה הזו כדי לקבל טוקן התחברות (לחץ להעתקה):
+      </p>
+      <div class="code-cmd" id="tokenCmdBox" onclick="copyCmd(this)" title="לחץ להעתקה">rclone authorize "drive"</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+        2. הדבק כאן את הטוקן שהתקבל (הטקסט שבין <code>---&gt;</code> ל־<code>&lt;---End paste</code>):
+      </p>
+      <textarea id="tokenTextarea" rows="4" required placeholder='{"access_token":"..."}' style="width:100%; background:#0f172a; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px; font-family:Consolas, monospace; font-size:12px; direction:ltr; resize:vertical;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">ביטול</button>
+        <button type="submit" class="btn-primary btn-sm" id="btnSubmitToken">חבר חשבון לענן</button>
+      </div>
+    </form>
   </div>
 
   <!-- Preview Modal -->
@@ -699,7 +722,7 @@
       document.getElementById('accountsCount').textContent = data.remotes.length;
       document.getElementById('btnLogout').style.display = data.authRequired ? 'inline-flex' : 'none';
       document.getElementById('windowsMountCard').style.display = data.isWindows ? 'flex' : 'none';
-      document.getElementById('addProvidersBox').style.display = data.isWindows ? 'flex' : 'none';
+      document.getElementById('btnExportConfig').style.display = data.isWindows ? 'none' : 'inline-flex';
       document.getElementById('winfspWarning').style.display = data.winfspInstalled ? 'none' : 'block';
 
       const pill = document.getElementById('mountPill');
@@ -986,9 +1009,65 @@
       await Promise.all([loadFiles(), loadStorage()]);
     }
 
+    let pendingTokenProvider = null;
+
+    function closeTokenModal() {
+      document.getElementById('tokenModal').classList.remove('open');
+      document.getElementById('tokenTextarea').value = '';
+    }
+
+    async function submitTokenAccount(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitToken');
+      const token = document.getElementById('tokenTextarea').value.trim();
+      if (!token || !pendingTokenProvider) return;
+      btn.disabled = true;
+      btn.textContent = 'מחבר...';
+      try {
+        const res = await fetch('/api/accounts/add-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: pendingTokenProvider, token })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        closeTokenModal();
+        toast(`החשבון ${data.name} חובר לענן! לחץ "העתק קונפיג לשמירה ב-Render" כדי לשמור אותו קבוע.`, 'success');
+        refreshAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'חבר חשבון לענן';
+      }
+    }
+
+    async function exportConfigBase64() {
+      try {
+        const res = await fetch('/api/accounts/export-base64');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        await navigator.clipboard.writeText(data.base64);
+        toast('RCLONE_CONFIG_BASE64 הועתק! הדבק אותו ב-Render Environment לשמירה קבועה.', 'success');
+      } catch (err) {
+        toast('שגיאה בייצוא: ' + err.message, 'error');
+      }
+    }
+
     // Account OAuth flow
     async function startAddAccount(provider) {
       const labels = { drive: 'Google Drive', onedrive: 'Microsoft OneDrive', dropbox: 'Dropbox' };
+
+      // On cloud server (Linux/Render), use the Token modal flow
+      if (!appStatus.isWindows) {
+        pendingTokenProvider = provider;
+        document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider]} חדש`;
+        document.getElementById('tokenCmdBox').textContent = `rclone authorize "${provider}"`;
+        document.getElementById('tokenTextarea').value = '';
+        document.getElementById('tokenModal').classList.add('open');
+        return;
+      }
+
       const res = await fetch('/api/accounts/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
