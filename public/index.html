@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>הענן המאוחד שלי — Unified Cloud</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: #111827;
+      --panel-2: #1e293b;
+      --border: #263248;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --sky: #38bdf8;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 310px;
+      min-width: 280px;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--sky));
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    }
+    .brand h1 { font-size: 17px; font-weight: 700; }
+    .brand p { font-size: 12px; color: var(--muted); }
+
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #26354d; }
+
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.28); }
+    .btn-success { background: rgba(34, 197, 94, 0.18); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .btn-success:hover:not(:disabled) { background: rgba(34, 197, 94, 0.3); }
+
+    .card {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #0f172a;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--sky));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .storage-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .account-item {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .account-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .account-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .provider-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-drive { background: rgba(56, 189, 248, 0.16); color: #7dd3fc; }
+    .badge-onedrive { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+    .badge-dropbox { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .badge-other { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+    .add-providers {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mount-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select, input[type="text"] {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-weight: 700;
+    }
+    .pill-on { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+    .pill-off { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+    .warn-box {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      color: #fde68a;
+      line-height: 1.5;
+    }
+    .code-cmd {
+      margin-top: 6px;
+      background: #0b1120;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      direction: ltr;
+      text-align: left;
+      color: #38bdf8;
+      cursor: pointer;
+      user-select: all;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+    }
+
+    .topbar {
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+    .crumb {
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+    .crumb:hover { background: var(--panel-2); color: var(--text); }
+    .crumb.active { color: var(--text); font-weight: 700; cursor: default; }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-input {
+      width: 220px;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 22px;
+    }
+
+    /* Grid View */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 14px;
+    }
+    .file-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .file-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .file-icon {
+      font-size: 36px;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .file-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .file-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+
+    /* List View */
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .file-table th, .file-table td {
+      padding: 11px 14px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .file-table th {
+      color: var(--muted);
+      font-weight: 600;
+      background: rgba(30, 41, 59, 0.5);
+    }
+    .file-table tr:hover td { background: rgba(99, 102, 241, 0.08); }
+    .file-table tr { cursor: pointer; }
+
+    /* Empty State */
+    .empty-state {
+      max-width: 520px;
+      margin: 60px auto;
+      text-align: center;
+      background: var(--panel);
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      padding: 40px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .empty-state .big-icon { font-size: 54px; }
+    .empty-state h2 { font-size: 20px; }
+    .empty-state p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* Drag overlay */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 17, 32, 0.85);
+      border: 3px dashed var(--sky);
+      z-index: 100;
+      display: none;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--sky);
+      pointer-events: none;
+    }
+    .drop-overlay.visible { display: grid; }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      place-items: center;
+      z-index: 200;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: grid; }
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .modal.wide { max-width: 860px; max-height: 90vh; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-body {
+      overflow: auto;
+      max-height: 68vh;
+    }
+    .modal-body img, .modal-body video {
+      max-width: 100%;
+      max-height: 65vh;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
+    }
+    .modal-body iframe {
+      width: 100%;
+      height: 64vh;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .modal-body pre {
+      background: #0f172a;
+      padding: 14px;
+      border-radius: 10px;
+      overflow: auto;
+      direction: ltr;
+      text-align: left;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 300;
+    }
+    .toast {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: slideUp 0.2s ease;
+    }
+    .toast.success { border-color: var(--green); }
+    .toast.error { border-color: var(--red); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--sky);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 820px) {
+      body { flex-direction: column; height: auto; overflow: auto; }
+      .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">☁️</div>
+      <div>
+        <h1>הענן המאוחד שלי</h1>
+        <p>Google + OneDrive בכונן אחד</p>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-primary" id="btnUpload">⬆️ העלה קבצים</button>
+      <button class="btn-secondary" id="btnNewFolder">📁 תיקייה חדשה</button>
+      <input type="file" id="fileInput" multiple hidden />
+    </div>
+
+    <!-- Total Pooled Storage -->
+    <div class="card">
+      <div class="card-header">
+        <span>📊 אחסון מאוחד</span>
+        <span id="totalFreeBadge" style="color: var(--sky); font-size: 12px;">טוען...</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="totalProgress" style="width: 0%"></div>
+      </div>
+      <div class="storage-numbers">
+        <span id="totalUsedText">0 GB בשימוש</span>
+        <span id="totalCapText">מתוך 0 GB</span>
+      </div>
+    </div>
+
+    <!-- Connected Accounts -->
+    <div class="card">
+      <div class="card-header">
+        <span>🔗 חשבונות מחוברים</span>
+        <span id="accountsCount" style="color: var(--muted); font-size: 12px;">0</span>
+      </div>
+      <div id="accountsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div class="add-providers" id="addProvidersBox">
+        <button class="btn-secondary btn-sm" onclick="startAddAccount('drive')">➕ חבר Google Drive (15GB)</button>
+        <button class="btn-secondary btn-sm" onclick="startAddAccount('onedrive')">➕ חבר Microsoft OneDrive (5GB)</button>
+        <button class="btn-secondary btn-sm" onclick="startAddAccount('dropbox')">➕ חבר Dropbox (2GB)</button>
+      </div>
+    </div>
+
+    <!-- Windows Drive Mount -->
+    <div class="card" id="windowsMountCard">
+      <div class="card-header">
+        <span>💻 כונן במחשב (Windows)</span>
+        <span class="status-pill pill-off" id="mountPill">מנותק</span>
+      </div>
+      <div id="winfspWarning" class="warn-box" style="display:none;">
+        כדי לחבר את הענן ככונן אמיתי (כמו <b>Z:\</b>), צריך להתקין פעם אחת את <b>WinFsp</b>. הרץ בטרמינל:
+        <div class="code-cmd" onclick="copyCmd(this)" title="לחץ להעתקה">winget install WinFsp.WinFsp</div>
+      </div>
+      <div class="mount-row">
+        <select id="driveSelect" style="width: 78px;">
+          <option value="Z">Z:\</option>
+          <option value="Y">Y:\</option>
+          <option value="X">X:\</option>
+          <option value="W">W:\</option>
+          <option value="M">M:\</option>
+          <option value="G">G:\</option>
+        </select>
+        <button class="btn-success btn-sm" id="btnMountToggle" style="flex:1;" onclick="toggleMount()">חבר כונן למחשב</button>
+      </div>
+      <button class="btn-secondary btn-sm" id="btnOpenExplorer" style="display:none;" onclick="openDriveInExplorer()">📂 פתח כונן בסייר הקבצים</button>
+    </div>
+  </aside>
+
+  <!-- Main Workspace -->
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumbs" id="breadcrumbs"></div>
+      <div class="topbar-controls">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 חפש קבצים בתיקייה..." />
+        <button class="btn-secondary btn-sm" id="btnViewToggle" onclick="toggleView()">☰ רשימה</button>
+        <button class="btn-secondary btn-sm" onclick="refreshAll()">🔄 רענן</button>
+        <button class="btn-danger btn-sm" id="btnLogout" style="display:none;" onclick="logout()">🔒 התנתק</button>
+      </div>
+    </header>
+
+    <section class="content" id="contentArea">
+      <div class="empty-state">
+        <div class="spinner" style="width:32px; height:32px;"></div>
+        <p>טוען את הענן המאוחד...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Drag & Drop Overlay -->
+  <div class="drop-overlay" id="dropOverlay">📥 שחרר כאן כדי להעלות לענן המאוחד</div>
+
+  <!-- Auth Progress Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="authModalTitle">מתחבר לחשבון ענן...</h3>
+      </div>
+      <p style="font-size:14px; color:var(--muted); line-height:1.6;" id="authModalDesc">
+        נפתח חלון דפדפן להתחברות מאובטחת. בחר את החשבון שלך, אשר את הגישה, והחלון הזה ייסגר אוטומטית כשהחשבון יצורף לענן המאוחד!
+      </p>
+      <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#0f172a; border-radius:10px;">
+        <span class="spinner"></span>
+        <span id="authStatusText" style="font-size:13px;">ממתין לאישור בדפדפן...</span>
+      </div>
+      <a id="authUrlBtn" href="#" target="_blank" class="btn-primary" style="display:none; text-decoration:none; text-align:center;">🔗 פתח דף התחברות בדפדפן</a>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn-danger btn-sm" onclick="cancelAuth()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-backdrop" id="previewModal" onclick="if(event.target===this) closePreview()">
+    <div class="modal wide">
+      <div class="modal-header">
+        <h3 id="previewTitle" style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">תצוגה מקדימה</h3>
+        <div style="display:flex; gap:8px;">
+          <a id="previewDownloadBtn" class="btn-primary btn-sm" style="text-decoration:none;">⬇️ הורד</a>
+          <button class="btn-secondary btn-sm" onclick="closePreview()">✕ סגור</button>
+        </div>
+      </div>
+      <div class="modal-body" id="previewBody"></div>
+    </div>
+  </div>
+
+  <!-- Login Modal (shown when CLOUD_PASSWORD is enabled) -->
+  <div class="modal-backdrop" id="loginModal" style="background: rgba(11, 17, 32, 0.96); z-index: 500;">
+    <form class="modal" onsubmit="doLogin(event)" style="max-width: 380px;">
+      <div style="text-align:center;">
+        <div style="font-size:44px; margin-bottom:8px;">☁️🔒</div>
+        <h2 style="font-size:20px;">הענן המאוחד שלי</h2>
+        <p style="font-size:13px; color:var(--muted); margin-top:4px;">הזן סיסמה כדי להיכנס לענן האישי שלך</p>
+      </div>
+      <input type="password" id="loginPassword" placeholder="סיסמת כניסה..." autocomplete="current-password" required style="width:100%; padding:11px 12px; background:#0f172a; color:var(--text); border:1px solid var(--border); border-radius:10px; font-size:14px;" />
+      <div id="loginError" style="color:#fca5a5; font-size:12px; display:none;"></div>
+      <button type="submit" class="btn-primary" style="width:100%; padding:11px;">כניסה לענן</button>
+    </form>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    let currentPath = '';
+    let currentItems = [];
+    let viewMode = 'grid';
+    let appStatus = { remotes: [], winfspInstalled: false, mounted: false, mountDrive: null };
+    let authPollTimer = null;
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(i >= 3 ? 2 : 1) + ' ' + units[i];
+    }
+
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => el.remove(), 4200);
+    }
+
+    function copyCmd(el) {
+      navigator.clipboard.writeText(el.textContent.trim());
+      toast('הפקודה הועתקה ללוח!', 'success');
+    }
+
+    function getFileIcon(item) {
+      if (item.isDir) return '📁';
+      const ext = (item.name.split('.').pop() || '').toLowerCase();
+      if (['png','jpg','jpeg','gif','webp','svg','bmp'].includes(ext)) return '🖼️';
+      if (['mp4','webm','mov','mkv','avi'].includes(ext)) return '🎬';
+      if (['mp3','wav','ogg','flac','m4a'].includes(ext)) return '🎵';
+      if (ext === 'pdf') return '📕';
+      if (['doc','docx','odt','rtf'].includes(ext)) return '📘';
+      if (['xls','xlsx','csv'].includes(ext)) return '📗';
+      if (['zip','rar','7z','tar','gz'].includes(ext)) return '🗜️';
+      if (['js','ts','py','html','css','json','md','txt'].includes(ext)) return '📄';
+      return '📎';
+    }
+
+    function providerLabel(type) {
+      if (type === 'drive') return { text: 'Google', cls: 'badge-drive' };
+      if (type === 'onedrive') return { text: 'OneDrive', cls: 'badge-onedrive' };
+      if (type === 'dropbox') return { text: 'Dropbox', cls: 'badge-dropbox' };
+      return { text: type, cls: 'badge-other' };
+    }
+
+    async function loadStatus() {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      if (!data.ok) return;
+      appStatus = data;
+
+      document.getElementById('accountsCount').textContent = data.remotes.length;
+      document.getElementById('btnLogout').style.display = data.authRequired ? 'inline-flex' : 'none';
+      document.getElementById('windowsMountCard').style.display = data.isWindows ? 'flex' : 'none';
+      document.getElementById('addProvidersBox').style.display = data.isWindows ? 'flex' : 'none';
+      document.getElementById('winfspWarning').style.display = data.winfspInstalled ? 'none' : 'block';
+
+      const pill = document.getElementById('mountPill');
+      const btnMount = document.getElementById('btnMountToggle');
+      const btnOpen = document.getElementById('btnOpenExplorer');
+      const driveSel = document.getElementById('driveSelect');
+
+      if (data.mounted) {
+        pill.textContent = `מחובר (${data.mountDrive}:\\)`;
+        pill.className = 'status-pill pill-on';
+        btnMount.textContent = 'נתק כונן';
+        btnMount.className = 'btn-danger btn-sm';
+        btnOpen.style.display = 'inline-flex';
+        driveSel.value = data.mountDrive;
+        driveSel.disabled = true;
+      } else {
+        pill.textContent = 'מנותק';
+        pill.className = 'status-pill pill-off';
+        btnMount.textContent = 'חבר כונן למחשב';
+        btnMount.className = 'btn-success btn-sm';
+        btnOpen.style.display = 'none';
+        driveSel.disabled = false;
+      }
+    }
+
+    async function loadStorage() {
+      const listEl = document.getElementById('accountsList');
+      const res = await fetch('/api/storage');
+      const data = await res.json();
+      if (!data.ok) return;
+
+      const pct = data.total > 0 ? Math.min(100, (data.used / data.total) * 100) : 0;
+      document.getElementById('totalProgress').style.width = pct.toFixed(1) + '%';
+      document.getElementById('totalUsedText').textContent = `${formatBytes(data.used)} בשימוש`;
+      document.getElementById('totalCapText').textContent = `מתוך ${formatBytes(data.total)}`;
+      document.getElementById('totalFreeBadge').textContent = `${formatBytes(data.free)} פנוי`;
+
+      if (data.accounts.length === 0) {
+        listEl.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:8px 0;">עדיין אין חשבונות מחוברים</div>';
+        return;
+      }
+
+      listEl.innerHTML = data.accounts.map(acc => {
+        const p = providerLabel(acc.type);
+        const apct = acc.total > 0 ? Math.min(100, (acc.used / acc.total) * 100) : 0;
+        return `
+          <div class="account-item">
+            <div class="account-top">
+              <div class="account-name">
+                <span class="provider-badge ${p.cls}">${p.text}</span>
+                <span>${escapeHtml(acc.name)}</span>
+              </div>
+              <button class="btn-danger btn-sm" style="padding:3px 7px; font-size:11px;" onclick="removeAccount('${escapeHtml(acc.name)}')" title="נתק חשבון">✕</button>
+            </div>
+            <div class="progress-bar" style="height:5px;">
+              <div class="progress-fill" style="width:${apct.toFixed(1)}%"></div>
+            </div>
+            <div class="storage-numbers" style="font-size:11px;">
+              <span>${acc.error ? 'שגיאת קריאה' : formatBytes(acc.used) + ' / ' + formatBytes(acc.total)}</span>
+              <span>${acc.error ? '' : formatBytes(acc.free) + ' פנוי'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadFiles(pathStr = currentPath) {
+      currentPath = pathStr;
+      renderBreadcrumbs();
+      const area = document.getElementById('contentArea');
+      area.innerHTML = '<div class="empty-state"><div class="spinner" style="width:32px;height:32px;"></div><p>טוען קבצים מהענן המאוחד...</p></div>';
+
+      try {
+        const res = await fetch('/api/files?path=' + encodeURIComponent(currentPath));
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+
+        if (data.emptyCloud) {
+          currentItems = [];
+          area.innerHTML = `
+            <div class="empty-state">
+              <div class="big-icon">☁️✨</div>
+              <h2>ברוך הבא לענן המאוחד שלך!</h2>
+              <p>חבר חשבון <b>Google Drive</b> או <b>Microsoft OneDrive</b> (או כמה חשבונות שתרצה!) כדי לאחד את כולם לענן אחד גדול — גם כאן בדפדפן וגם ככונן <b>Z:\\</b> במחשב.</p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px;">
+                <button class="btn-primary" onclick="startAddAccount('drive')">➕ חבר Google Drive (15GB)</button>
+                <button class="btn-secondary" onclick="startAddAccount('onedrive')">➕ חבר OneDrive (5GB)</button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        currentItems = data.items || [];
+        renderFiles();
+      } catch (err) {
+        area.innerHTML = `<div class="empty-state"><div class="big-icon">⚠️</div><h2>שגיאה בטעינת הקבצים</h2><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderBreadcrumbs() {
+      const bc = document.getElementById('breadcrumbs');
+      const parts = currentPath ? currentPath.split('/') : [];
+      let html = `<span class="crumb ${parts.length === 0 ? 'active' : ''}" onclick="loadFiles('')">🏠 הענן שלי</span>`;
+      let accum = '';
+      parts.forEach((p, idx) => {
+        accum = accum ? `${accum}/${p}` : p;
+        const isLast = idx === parts.length - 1;
+        html += `<span style="color:var(--muted)">/</span><span class="crumb ${isLast ? 'active' : ''}" onclick="loadFiles('${escapeAttr(accum)}')">${escapeHtml(p)}</span>`;
+      });
+      bc.innerHTML = html;
+    }
+
+    function renderFiles() {
+      const area = document.getElementById('contentArea');
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const filtered = q ? currentItems.filter(i => i.name.toLowerCase().includes(q)) : currentItems;
+
+      if (filtered.length === 0) {
+        area.innerHTML = `
+          <div class="empty-state">
+            <div class="big-icon">📂</div>
+            <h2>${q ? 'לא נמצאו קבצים תואמים' : 'התיקייה הזו ריקה'}</h2>
+            <p>${q ? 'נסה מילת חיפוש אחרת.' : 'גרור לכאן קבצים מהמחשב או לחץ על "העלה קבצים" כדי להתחיל.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (viewMode === 'grid') {
+        area.innerHTML = `<div class="file-grid">${filtered.map(item => `
+          <div class="file-card" onclick="openItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">
+            <div class="file-icon">${getFileIcon(item)}</div>
+            <div class="file-name" title="${escapeAttr(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="file-meta">
+              <span>${item.isDir ? 'תיקייה' : formatBytes(item.size)}</span>
+              <span>${item.modTime ? new Date(item.modTime).toLocaleDateString('he-IL') : ''}</span>
+            </div>
+            <div class="file-actions" onclick="event.stopPropagation()">
+              ${!item.isDir ? `<button class="btn-secondary btn-sm" style="padding:4px 7px;" title="הורד" onclick="downloadItem('${escapeAttr(item.path)}')">⬇️</button>` : ''}
+              <button class="btn-secondary btn-sm" style="padding:4px 7px;" title="שנה שם" onclick="renameItem('${escapeAttr(item.path)}', '${escapeAttr(item.name)}')">✏️</button>
+              <button class="btn-danger btn-sm" style="padding:4px 7px;" title="מחק" onclick="deleteItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">🗑️</button>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      } else {
+        area.innerHTML = `
+          <table class="file-table">
+            <thead>
+              <tr>
+                <th>שם</th>
+                <th>גודל</th>
+                <th>תאריך שינוי</th>
+                <th style="width:140px;">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(item => `
+                <tr onclick="openItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">
+                  <td><span style="margin-left:8px;">${getFileIcon(item)}</span><b>${escapeHtml(item.name)}</b></td>
+                  <td>${item.isDir ? '—' : formatBytes(item.size)}</td>
+                  <td>${item.modTime ? new Date(item.modTime).toLocaleString('he-IL') : ''}</td>
+                  <td onclick="event.stopPropagation()">
+                    ${!item.isDir ? `<button class="btn-secondary btn-sm" style="padding:4px 7px;" onclick="downloadItem('${escapeAttr(item.path)}')">⬇️</button>` : ''}
+                    <button class="btn-secondary btn-sm" style="padding:4px 7px;" onclick="renameItem('${escapeAttr(item.path)}', '${escapeAttr(item.name)}')">✏️</button>
+                    <button class="btn-danger btn-sm" style="padding:4px 7px;" onclick="deleteItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">🗑️</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
+    function toggleView() {
+      viewMode = viewMode === 'grid' ? 'list' : 'grid';
+      document.getElementById('btnViewToggle').textContent = viewMode === 'grid' ? '☰ רשימה' : '⊞ אריחים';
+      renderFiles();
+    }
+
+    function openItem(itemPath, isDir, name) {
+      if (isDir) {
+        loadFiles(itemPath);
+        return;
+      }
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      const inlineUrl = `/api/download?path=${encodeURIComponent(itemPath)}&inline=1`;
+      const downloadUrl = `/api/download?path=${encodeURIComponent(itemPath)}`;
+
+      const modal = document.getElementById('previewModal');
+      const body = document.getElementById('previewBody');
+      document.getElementById('previewTitle').textContent = name;
+      document.getElementById('previewDownloadBtn').href = downloadUrl;
+
+      if (['png','jpg','jpeg','gif','webp','svg','bmp'].includes(ext)) {
+        body.innerHTML = `<img src="${inlineUrl}" alt="${escapeAttr(name)}" />`;
+        modal.classList.add('open');
+      } else if (['mp4','webm','mov'].includes(ext)) {
+        body.innerHTML = `<video src="${inlineUrl}" controls autoplay></video>`;
+        modal.classList.add('open');
+      } else if (['mp3','wav','ogg'].includes(ext)) {
+        body.innerHTML = `<audio src="${inlineUrl}" controls autoplay style="width:100%;"></audio>`;
+        modal.classList.add('open');
+      } else if (ext === 'pdf') {
+        body.innerHTML = `<iframe src="${inlineUrl}"></iframe>`;
+        modal.classList.add('open');
+      } else if (['txt','md','json','csv','log','js','html','css','py'].includes(ext)) {
+        body.innerHTML = '<div style="text-align:center; padding:20px;"><span class="spinner"></span></div>';
+        modal.classList.add('open');
+        fetch(inlineUrl).then(r => r.text()).then(txt => {
+          body.innerHTML = `<pre>${escapeHtml(txt.slice(0, 100000))}</pre>`;
+        });
+      } else {
+        downloadItem(itemPath);
+      }
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('open');
+      document.getElementById('previewBody').innerHTML = '';
+    }
+
+    function downloadItem(itemPath) {
+      window.location.href = `/api/download?path=${encodeURIComponent(itemPath)}`;
+    }
+
+    async function uploadFiles(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const formData = new FormData();
+      for (const f of fileList) formData.append('files', f);
+
+      toast(`מעלה ${fileList.length} קבצים לענן המאוחד...`, 'info');
+      try {
+        const res = await fetch('/api/upload?path=' + encodeURIComponent(currentPath), {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        toast(`הועלו ${data.uploaded.length} קבצים בהצלחה!`, 'success');
+        await Promise.all([loadFiles(), loadStorage()]);
+      } catch (err) {
+        toast('שגיאה בהעלאה: ' + err.message, 'error');
+      }
+    }
+
+    async function createFolder() {
+      const name = prompt('שם התיקייה החדשה:');
+      if (!name || !name.trim()) return;
+      const res = await fetch('/api/mkdir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: currentPath, name: name.trim() })
+      });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+      toast('התיקייה נוצרה!', 'success');
+      loadFiles();
+    }
+
+    async function renameItem(oldPath, oldName) {
+      const newName = prompt('שם חדש:', oldName);
+      if (!newName || !newName.trim() || newName.trim() === oldName) return;
+      const res = await fetch('/api/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPath, newName: newName.trim() })
+      });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+      toast('השם שונה בהצלחה!', 'success');
+      loadFiles();
+    }
+
+    async function deleteItem(itemPath, isDir, name) {
+      if (!confirm(`למחוק את "${name}" מהענן?`)) return;
+      const res = await fetch(`/api/files?path=${encodeURIComponent(itemPath)}&isDir=${isDir}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+      toast('נמחק בהצלחה.', 'success');
+      await Promise.all([loadFiles(), loadStorage()]);
+    }
+
+    // Account OAuth flow
+    async function startAddAccount(provider) {
+      const labels = { drive: 'Google Drive', onedrive: 'Microsoft OneDrive', dropbox: 'Dropbox' };
+      const res = await fetch('/api/accounts/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider })
+      });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+
+      document.getElementById('authModalTitle').textContent = `מחבר חשבון ${labels[provider]} (${data.name})`;
+      document.getElementById('authStatusText').textContent = 'ממתין לאישור בחלון הדפדפן שנפתח...';
+      const urlBtn = document.getElementById('authUrlBtn');
+      urlBtn.style.display = 'none';
+      urlBtn.href = '#';
+      document.getElementById('authModal').classList.add('open');
+
+      if (authPollTimer) clearInterval(authPollTimer);
+      authPollTimer = setInterval(async () => {
+        const stRes = await fetch('/api/accounts/auth-status');
+        const st = await stRes.json();
+        if (st.authUrl && urlBtn.style.display === 'none') {
+          urlBtn.href = st.authUrl;
+          urlBtn.style.display = 'inline-flex';
+        }
+        if (st.status === 'done') {
+          clearInterval(authPollTimer);
+          document.getElementById('authModal').classList.remove('open');
+          toast(`החשבון ${st.name} חובר ונוסף לענן המאוחד!`, 'success');
+          refreshAll();
+        } else if (st.status === 'error') {
+          clearInterval(authPollTimer);
+          document.getElementById('authModal').classList.remove('open');
+          toast('ההתחברות נכשלה: ' + (st.error || 'שגיאה'), 'error');
+        }
+      }, 1000);
+    }
+
+    async function cancelAuth() {
+      if (authPollTimer) clearInterval(authPollTimer);
+      await fetch('/api/accounts/cancel-auth', { method: 'POST' });
+      document.getElementById('authModal').classList.remove('open');
+    }
+
+    async function removeAccount(name) {
+      if (!confirm(`לנתק את החשבון "${name}" מהענן המאוחד? (הקבצים בחשבון עצמו לא יימחקו)`)) return;
+      const res = await fetch('/api/accounts/' + encodeURIComponent(name), { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+      toast(`החשבון ${name} נותק.`, 'success');
+      refreshAll();
+    }
+
+    // Mount control
+    async function toggleMount() {
+      const btn = document.getElementById('btnMountToggle');
+      btn.disabled = true;
+      try {
+        if (appStatus.mounted) {
+          await fetch('/api/mount/stop', { method: 'POST' });
+          toast('הכונן נותק מהמחשב.', 'info');
+        } else {
+          const driveLetter = document.getElementById('driveSelect').value;
+          const res = await fetch('/api/mount/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ driveLetter })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error);
+          toast(`הענן המאוחד חובר ככונן ${data.driveLetter}:\\ במחשב!`, 'success');
+        }
+        await loadStatus();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function openDriveInExplorer() {
+      await fetch('/api/mount/open', { method: 'POST' });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+    function escapeAttr(s) {
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    async function refreshAll() {
+      await loadStatus();
+      await Promise.all([loadStorage(), loadFiles()]);
+    }
+
+    // Events
+    document.getElementById('btnUpload').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('fileInput').onchange = (e) => { uploadFiles(e.target.files); e.target.value = ''; };
+    document.getElementById('btnNewFolder').onclick = createFolder;
+    document.getElementById('searchInput').oninput = renderFiles;
+
+    // Drag & Drop
+    let dragCounter = 0;
+    const dropOverlay = document.getElementById('dropOverlay');
+    window.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; dropOverlay.classList.add('visible'); });
+    window.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dropOverlay.classList.remove('visible'); } });
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => {
+      e.preventDefault();
+      dragCounter = 0;
+      dropOverlay.classList.remove('visible');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        uploadFiles(e.dataTransfer.files);
+      }
+    });
+
+    async function doLogin(e) {
+      e.preventDefault();
+      const pw = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      errEl.style.display = 'none';
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        errEl.textContent = data.error || 'סיסמה שגויה';
+        errEl.style.display = 'block';
+        return;
+      }
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginModal').classList.remove('open');
+      refreshAll();
+    }
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      document.getElementById('loginModal').classList.add('open');
+    }
+
+    async function initApp() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authRequired && !data.authenticated) {
+          document.getElementById('loginModal').classList.add('open');
+          document.getElementById('loginPassword').focus();
+          return;
+        }
+      } catch (_) {}
+      refreshAll();
+    }
+
+    // Init
+    initApp();
+  </script>
+</body>
+</html>
