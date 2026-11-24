@@ -4,4 +4,5 @@ node_modules/
 *.conf
 rclone.conf
 rclone-base64.txt
+oauth-settings.json
 cloudflared.exe

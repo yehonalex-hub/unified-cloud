@@ -1,5 +1,18 @@
+const path = require('path');
+const fs = require('fs');
 const { runRclone, listUserRemotes } = require('./rclone-runner');
 const { getOneDriveOAuthConfig, addOneDriveAccountWithToken } = require('./onedrive');
+
+function getStoredOAuthKey(key) {
+  try {
+    const p = path.join(__dirname, '..', 'oauth-settings.json');
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return data[key] || '';
+    }
+  } catch (_) {}
+  return '';
+}
 
 // Modular Cloud Providers Connector (Ember, Skye, Turnip domain)
 // Isolates Dropbox, MEGA, Box, pCloud, Koofr, Cloudflare R2 / S3, Yandex, delegating OneDrive to Atlas's onedrive connector
@@ -19,8 +32,8 @@ const PROVIDER_NAMES = {
 
 function getProviderOAuthConfig(provider) {
   if (provider === 'dropbox') {
-    const clientId = (process.env.DROPBOX_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.DROPBOX_CLIENT_SECRET || '').trim();
+    const clientId = (process.env.DROPBOX_CLIENT_ID || getStoredOAuthKey('DROPBOX_CLIENT_ID') || '').trim();
+    const clientSecret = (process.env.DROPBOX_CLIENT_SECRET || getStoredOAuthKey('DROPBOX_CLIENT_SECRET') || '').trim();
     if (!clientId || !clientSecret) return null;
     return {
       clientId,
@@ -34,8 +47,8 @@ function getProviderOAuthConfig(provider) {
     return getOneDriveOAuthConfig();
   }
   if (provider === 'box') {
-    const clientId = (process.env.BOX_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.BOX_CLIENT_SECRET || '').trim();
+    const clientId = (process.env.BOX_CLIENT_ID || getStoredOAuthKey('BOX_CLIENT_ID') || '').trim();
+    const clientSecret = (process.env.BOX_CLIENT_SECRET || getStoredOAuthKey('BOX_CLIENT_SECRET') || '').trim();
     if (!clientId || !clientSecret) return null;
     return {
       clientId,
@@ -46,8 +59,8 @@ function getProviderOAuthConfig(provider) {
     };
   }
   if (provider === 'pcloud') {
-    const clientId = (process.env.PCLOUD_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.PCLOUD_CLIENT_SECRET || '').trim();
+    const clientId = (process.env.PCLOUD_CLIENT_ID || getStoredOAuthKey('PCLOUD_CLIENT_ID') || '').trim();
+    const clientSecret = (process.env.PCLOUD_CLIENT_SECRET || getStoredOAuthKey('PCLOUD_CLIENT_SECRET') || '').trim();
     if (!clientId || !clientSecret) return null;
     return {
       clientId,
@@ -58,8 +71,8 @@ function getProviderOAuthConfig(provider) {
     };
   }
   if (provider === 'yandex') {
-    const clientId = (process.env.YANDEX_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.YANDEX_CLIENT_SECRET || '').trim();
+    const clientId = (process.env.YANDEX_CLIENT_ID || getStoredOAuthKey('YANDEX_CLIENT_ID') || '').trim();
+    const clientSecret = (process.env.YANDEX_CLIENT_SECRET || getStoredOAuthKey('YANDEX_CLIENT_SECRET') || '').trim();
     if (!clientId || !clientSecret) return null;
     return {
       clientId,

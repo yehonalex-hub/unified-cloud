@@ -48,6 +48,26 @@ git push -u origin main
   - חיבור מקומי: לחץ על **🟦 Box** בממשק האתר — ייפתח חלון דפדפן להתחברות ישירה לחשבון Box שלך.
   - שטח נרחב: Box מעניק 10GB חינם שמתווספים ישירות לשטח האחסון הכולל של הענן המאוחד שלך (`mycloud`).
 
+## הגדרת התחברות 1-קליק ל-OneDrive (כמו של Google!)
+כדי שלחיצה על **Microsoft OneDrive** תפתח ישירות את מסך בחירת החשבונות של מיקרוסופט (בדיוק כמו גוגל, בלי פקודות טרמינל):
+
+1. היכנס לפורטל [Microsoft Entra / Azure App Registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade).
+2. לחץ על **New registration** (רישום חדש):
+   - **Name:** `Unified Cloud`
+   - **Supported account types:** בחר באפשרות השלישית:
+     `Accounts in any organizational directory and personal Microsoft accounts (e.g. Skype, Xbox, Outlook.com)` *(חשוב מאוד! מאפשר לחבר כל חשבון אישי או ארגוני)*.
+   - **Redirect URI:** בחר **Web** והזן:
+     `https://unified-cloud.onrender.com/api/oauth/callback/onedrive`
+3. לחץ **Register**.
+4. בעמוד הראשי של האפליקציה, העתק את ה-**Application (client) ID**.
+5. בתפריט הצד לחץ על **Certificates & secrets** → **New client secret** → לחץ **Add** והעתק את ה-**Value** (לא את ה-Secret ID).
+6. הוסף ב-**Render** תחת **Environment**:
+   - `ONEDRIVE_CLIENT_ID` = ה-Client ID שהעתקת
+   - `ONEDRIVE_CLIENT_SECRET` = ערך ה-Secret שהעתקת
+   *(או הזן אותם ישירות באתר תחת חלון החיבור בטאב "התחברות ב-1-קליק")*.
+
+ברגע שזה מוגדר, לחיצה על OneDrive תפתח מיד את מסך בחירת החשבון של מיקרוסופט בדיוק כמו גוגל!
+
 ## בדיקה מקומית של מסך ההתחברות
 אם תרצה לבדוק את מסך הסיסמה כבר עכשיו על המחשב שלך:
 ```powershell

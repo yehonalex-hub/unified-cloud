@@ -259,6 +259,37 @@ app.get('/api/oauth/callback/:provider', async (req, res) => {
   }
 });
 
+app.post('/api/oauth/configure', (req, res) => {
+  try {
+    const { provider, clientId, clientSecret } = req.body || {};
+    if (!provider || !clientId || !clientSecret) {
+      return res.status(400).json({ ok: false, error: 'נדרש ספק (provider), Client ID ו-Client Secret' });
+    }
+    const mapping = {
+      drive: { idKey: 'GOOGLE_CLIENT_ID', secretKey: 'GOOGLE_CLIENT_SECRET' },
+      onedrive: { idKey: 'ONEDRIVE_CLIENT_ID', secretKey: 'ONEDRIVE_CLIENT_SECRET' },
+      dropbox: { idKey: 'DROPBOX_CLIENT_ID', secretKey: 'DROPBOX_CLIENT_SECRET' },
+      box: { idKey: 'BOX_CLIENT_ID', secretKey: 'BOX_CLIENT_SECRET' }
+    };
+    const target = mapping[provider];
+    if (!target) {
+      return res.status(400).json({ ok: false, error: 'ספק לא נתמך' });
+    }
+    const settingsPath = path.join(__dirname, 'oauth-settings.json');
+    let current = {};
+    if (fs.existsSync(settingsPath)) {
+      try { current = JSON.parse(fs.readFileSync(settingsPath, 'utf8')); } catch (_) {}
+    }
+    current[target.idKey] = String(clientId).trim();
+    current[target.secretKey] = String(clientSecret).trim();
+    fs.writeFileSync(settingsPath, JSON.stringify(current, null, 2), 'utf8');
+
+    res.json({ ok: true, message: `הגדרות OAuth עבור ${provider} נשמרו בהצלחה!` });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Temp upload directory

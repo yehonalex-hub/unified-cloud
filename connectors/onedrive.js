@@ -1,12 +1,25 @@
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 const { runRclone, listUserRemotes } = require('./rclone-runner');
 
 // Dedicated OneDrive & Microsoft 365 / SharePoint Connector (Atlas domain)
 // Isolates all Microsoft Graph OAuth 2.0, OneDrive Personal, and Microsoft 365 Business integration
 
+function getStoredOAuthKey(key) {
+  try {
+    const p = path.join(__dirname, '..', 'oauth-settings.json');
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return data[key] || '';
+    }
+  } catch (_) {}
+  return '';
+}
+
 function getOneDriveOAuthConfig() {
-  const clientId = (process.env.ONEDRIVE_CLIENT_ID || process.env.MICROSOFT_CLIENT_ID || '').trim();
-  const clientSecret = (process.env.ONEDRIVE_CLIENT_SECRET || process.env.MICROSOFT_CLIENT_SECRET || '').trim();
+  const clientId = (process.env.ONEDRIVE_CLIENT_ID || process.env.MICROSOFT_CLIENT_ID || getStoredOAuthKey('ONEDRIVE_CLIENT_ID') || '').trim();
+  const clientSecret = (process.env.ONEDRIVE_CLIENT_SECRET || process.env.MICROSOFT_CLIENT_SECRET || getStoredOAuthKey('ONEDRIVE_CLIENT_SECRET') || '').trim();
   if (!clientId || !clientSecret) return null;
 
   return {

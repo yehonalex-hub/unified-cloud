@@ -1,4 +1,6 @@
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 const { runRclone, listUserRemotes, getRemotesConfig, getRcloneEnv } = require('./rclone-runner');
 
 // Dedicated Google Drive Connector (Luna / Pixel domain)
@@ -6,9 +8,20 @@ const { runRclone, listUserRemotes, getRemotesConfig, getRcloneEnv } = require('
 
 const googleAccountCache = new Map(); // remoteName -> { email, displayName, fetchedAt }
 
+function getStoredOAuthKey(key) {
+  try {
+    const p = path.join(__dirname, '..', 'oauth-settings.json');
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return data[key] || '';
+    }
+  } catch (_) {}
+  return '';
+}
+
 function getGoogleOAuthConfig() {
-  const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-  const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+  const clientId = (process.env.GOOGLE_CLIENT_ID || getStoredOAuthKey('GOOGLE_CLIENT_ID') || '').trim();
+  const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || getStoredOAuthKey('GOOGLE_CLIENT_SECRET') || '').trim();
   if (!clientId || !clientSecret) return null;
   return {
     clientId,

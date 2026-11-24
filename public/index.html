@@ -1309,26 +1309,72 @@
     </div>
   </div>
 
-  <!-- Add Account by Token Modal (for Cloud Server / Render) -->
+  <!-- Add Account Modal (for Cloud Server / Render) -->
   <div class="modal-backdrop" id="tokenModal" onclick="if(event.target===this) closeTokenModal()">
-    <form class="modal" onsubmit="submitTokenAccount(event)">
+    <div class="modal" style="max-width: 540px;">
       <div class="modal-header">
         <h3 id="tokenModalTitle">חבר חשבון חדש</h3>
         <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">✕</button>
       </div>
-      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
-        1. הרץ במחשב שלך את הפקודה הזו לקבלת טוקן התחברות:
-      </p>
-      <div class="code-cmd" id="tokenCmdBox" onclick="copyCmd(this)" title="לחץ להעתקה">rclone authorize "drive"</div>
-      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
-        2. הדבק כאן את הטוקן שהתקבל (הטקסט שבין <code>---&gt;</code> ל־<code>&lt;---End paste</code>):
-      </p>
-      <textarea id="tokenTextarea" rows="4" required placeholder='{"access_token":"..."}' style="width:100%; background:#0b1120; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px; font-family:'JetBrains Mono', Consolas, monospace; font-size:12px; direction:ltr; resize:vertical;"></textarea>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">ביטול</button>
-        <button type="submit" class="btn-primary btn-sm" id="btnSubmitToken">חבר חשבון לענן</button>
+
+      <!-- Mode Selector Tabs -->
+      <div style="display:flex; gap:8px; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <button type="button" id="tabOAuthMode" class="btn-primary btn-sm" onclick="switchTokenModalTab('oauth')">✨ התחברות ב-1-קליק (כמו גוגל)</button>
+        <button type="button" id="tabTokenMode" class="btn-secondary btn-sm" onclick="switchTokenModalTab('token')">הדבקת טוקן rclone</button>
       </div>
-    </form>
+
+      <!-- Tab 1: 1-Click OAuth Setup -->
+      <div id="modalOAuthSection">
+        <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-weight: 600; font-size: 13.5px; color: #a5b4fc; margin-bottom: 6px;">
+            🔑 רוצה התחברות ב-1-קליק (בדיוק כמו גוגל דרייב)?
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+            להפעלת מסך בחירת החשבונות בלחיצה אחת עבור <strong id="oauthProviderName" style="color:var(--text);">ספק זה</strong>, נדרשים Client ID ו-Secret:
+          </div>
+          <div style="margin-top: 8px; font-size: 11.5px; color: var(--text-muted);">
+            כתובת ה-Redirect URI להגדרה באפליקציה (לחץ להעתקה):
+          </div>
+          <div class="code-cmd" id="oauthRedirectUriBox" onclick="copyCmd(this)" title="לחץ להעתקה" style="margin-top: 4px; font-size: 11.5px; padding: 6px 10px;"></div>
+        </div>
+
+        <form onsubmit="submitOAuthConfig(event)">
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 14px;">
+            <div>
+              <label style="font-size: 12px; color: var(--text-muted); display:block; margin-bottom: 4px;">Client ID (Application ID):</label>
+              <input type="text" id="oauthClientIdInput" required placeholder="למשל: a1b2c3d4-e5f6-7890-..." style="width:100%; background:#0b1120; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; direction:ltr;" />
+            </div>
+            <div>
+              <label style="font-size: 12px; color: var(--text-muted); display:block; margin-bottom: 4px;">Client Secret (ערך הסיסמה):</label>
+              <input type="password" id="oauthClientSecretInput" required placeholder="ערך ה-Secret" style="width:100%; background:#0b1120; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; direction:ltr;" />
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-size: 11px; color: var(--text-muted);">שומר בשרת ומפעיל כפתור 1-Click מיד</span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">ביטול</button>
+              <button type="submit" class="btn-primary btn-sm" id="btnSaveOAuth">שמור והתחבר 🚀</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tab 2: Manual rclone authorize token -->
+      <form id="modalTokenSection" onsubmit="submitTokenAccount(event)" style="display:none;">
+        <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom: 8px;">
+          1. הרץ במחשב שלך את הפקודה הזו לקבלת טוקן התחברות:
+        </p>
+        <div class="code-cmd" id="tokenCmdBox" onclick="copyCmd(this)" title="לחץ להעתקה">rclone authorize "drive"</div>
+        <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-top: 10px; margin-bottom: 8px;">
+          2. הדבק כאן את הטוקן שהתקבל (הטקסט שבין <code>---&gt;</code> ל־<code>&lt;---End paste</code>):
+        </p>
+        <textarea id="tokenTextarea" rows="4" placeholder='{"access_token":"..."}' style="width:100%; background:#0b1120; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px; font-family:'JetBrains Mono', Consolas, monospace; font-size:12px; direction:ltr; resize:vertical; margin-bottom: 14px;"></textarea>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">ביטול</button>
+          <button type="submit" class="btn-primary btn-sm" id="btnSubmitToken">חבר חשבון לענן</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Rich Media Preview Modal -->
@@ -2216,7 +2262,61 @@
     function closeTokenModal() {
       document.getElementById('tokenModal').classList.remove('open');
       document.getElementById('tokenTextarea').value = '';
+      const idIn = document.getElementById('oauthClientIdInput');
+      const secIn = document.getElementById('oauthClientSecretInput');
+      if (idIn) idIn.value = '';
+      if (secIn) secIn.value = '';
       pendingCustomName = null;
+    }
+
+    function switchTokenModalTab(tab) {
+      const isOauth = tab === 'oauth';
+      const oSection = document.getElementById('modalOAuthSection');
+      const tSection = document.getElementById('modalTokenSection');
+      const tabO = document.getElementById('tabOAuthMode');
+      const tabT = document.getElementById('tabTokenMode');
+      if (oSection) oSection.style.display = isOauth ? 'block' : 'none';
+      if (tSection) tSection.style.display = isOauth ? 'none' : 'block';
+      if (tabO) tabO.className = isOauth ? 'btn-primary btn-sm' : 'btn-secondary btn-sm';
+      if (tabT) tabT.className = isOauth ? 'btn-secondary btn-sm' : 'btn-primary btn-sm';
+    }
+
+    async function submitOAuthConfig(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSaveOAuth');
+      const clientId = (document.getElementById('oauthClientIdInput').value || '').trim();
+      const clientSecret = (document.getElementById('oauthClientSecretInput').value || '').trim();
+      if (!clientId || !clientSecret || !pendingTokenProvider) return;
+
+      btn.disabled = true;
+      btn.textContent = 'שומר הגדרות...';
+      try {
+        const res = await fetch('/api/oauth/configure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: pendingTokenProvider,
+            clientId,
+            clientSecret
+          })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+
+        toast('הגדרות OAuth נשמרו! מעביר אותך כעת להתחברות ב-1-קליק...', 'success');
+        const prov = pendingTokenProvider;
+        const cName = pendingCustomName;
+        closeTokenModal();
+
+        setTimeout(() => {
+          const qs = cName ? `?customName=${encodeURIComponent(cName)}` : '';
+          window.location.href = `/api/oauth/start/${encodeURIComponent(prov)}${qs}`;
+        }, 600);
+      } catch (err) {
+        toast('שגיאה בשמירת הגדרות: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'שמור והתחבר 🚀';
+      }
     }
 
     async function submitTokenAccount(e) {
@@ -2444,6 +2544,18 @@
         document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider] || provider} חדש`;
         document.getElementById('tokenCmdBox').textContent = `rclone authorize "${provider}"`;
         document.getElementById('tokenTextarea').value = '';
+
+        // Setup 1-Click OAuth information
+        const pName = document.getElementById('oauthProviderName');
+        if (pName) pName.textContent = labels[provider] || provider;
+        const uriBox = document.getElementById('oauthRedirectUriBox');
+        if (uriBox) {
+          const proto = window.location.protocol;
+          const host = window.location.host;
+          uriBox.textContent = `${proto}//${host}/api/oauth/callback/${encodeURIComponent(provider)}`;
+        }
+        switchTokenModalTab('oauth');
+
         document.getElementById('tokenModal').classList.add('open');
         return;
       }
