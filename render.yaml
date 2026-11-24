@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: unified-cloud
+    runtime: docker
+    plan: free
+    envVars:
+      - key: CLOUD_PASSWORD
+        sync: false
+      - key: RCLONE_CONFIG_BASE64
+        sync: false
+      # Optional: 1-Click Web OAuth for Dropbox & Box
+      # - key: DROPBOX_CLIENT_ID
+      #   sync: false
+      # - key: DROPBOX_CLIENT_SECRET
+      #   sync: false
+      # - key: BOX_CLIENT_ID
+      #   sync: false
+      # - key: BOX_CLIENT_SECRET
+      #   sync: false

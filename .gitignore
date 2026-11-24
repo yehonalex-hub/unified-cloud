@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.env
+*.conf
+rclone.conf
+rclone-base64.txt
+cloudflared.exe

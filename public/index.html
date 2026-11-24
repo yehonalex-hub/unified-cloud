@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>הענן המאוחד שלי — Unified Cloud Pro</title>
+  
+  <!-- Modern Hebrew Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #070b14;
+      --bg-surface: #0c1222;
+      --panel: rgba(15, 23, 42, 0.85);
+      --panel-card: rgba(22, 33, 56, 0.55);
+      --panel-2: #1e293b;
+      --panel-hover: rgba(30, 41, 59, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(99, 102, 241, 0.4);
+      --border-focus: #6366f1;
+      --border-glow: rgba(99, 102, 241, 0.25);
+      --text: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --sky: #38bdf8;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --radius-sm: 8px;
+      --radius: 14px;
+      --radius-lg: 20px;
+      --glass-blur: blur(16px);
+      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 100%);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.5); }
+
+    /* Button System */
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      user-select: none;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 13px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 13px;
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #27354f;
+      border-color: var(--border-hover);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-sm { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.28);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.24);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .btn-success {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .btn-success:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.28);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 320px;
+      min-width: 290px;
+      background: var(--panel);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      gap: 16px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 100%);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      box-shadow: 0 8px 24px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .brand-text h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
+    .brand-text p { font-size: 11px; color: var(--sky); font-weight: 500; }
+    
+    .mobile-close-btn {
+      display: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 20px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .mobile-close-btn:hover { color: var(--text); background: var(--panel-2); }
+
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .card {
+      background: var(--panel-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #090e1a;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--sky) 100%);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    .storage-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .account-item {
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: var(--transition);
+    }
+    .account-item:hover {
+      border-color: var(--border-hover);
+      background: rgba(18, 27, 49, 0.9);
+    }
+    .account-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .account-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .provider-badge {
+      font-size: 10px;
+      padding: 2.5px 7px;
+      border-radius: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .badge-drive { background: rgba(56, 189, 248, 0.16); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.28); }
+    .badge-shared { background: rgba(147, 51, 234, 0.22); color: #c084fc; border: 1px solid rgba(147, 51, 234, 0.35); }
+    .badge-onedrive { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-dropbox { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-box { background: rgba(0, 97, 213, 0.22); color: #60a5fa; border: 1px solid rgba(0, 97, 213, 0.35); }
+    .badge-webdav { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-koofr { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-yandex { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .badge-mega { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .badge-s3 { background: rgba(249, 115, 22, 0.2); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.35); }
+    .badge-other { background: rgba(148, 163, 184, 0.18); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.25); }
+
+    .add-providers {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .mount-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select, input[type="text"], input[type="password"] {
+      background: #0b1120;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 11px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: var(--transition);
+    }
+    select:focus, input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--border-glow);
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-weight: 700;
+    }
+    .pill-on { background: rgba(34, 197, 94, 0.18); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .pill-off { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
+
+    .warn-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      color: #fde68a;
+      line-height: 1.5;
+    }
+    .code-cmd {
+      margin-top: 6px;
+      background: #070b14;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 11.5px;
+      direction: ltr;
+      text-align: left;
+      color: #38bdf8;
+      cursor: pointer;
+      user-select: all;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      transition: var(--transition);
+    }
+    .code-cmd:hover { border-color: var(--sky); background: #0c1527; }
+
+    /* Main Workspace */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      background: transparent;
+    }
+
+    .topbar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(12, 18, 34, 0.78);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      z-index: 5;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      font-size: 14px;
+      border-radius: 9px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 2px 0;
+    }
+    .crumb {
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .crumb:hover { background: var(--panel-2); color: var(--text); }
+    .crumb.active { color: var(--text); font-weight: 700; cursor: default; }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input {
+      width: 210px;
+      padding-right: 32px;
+      border-radius: 10px;
+      transition: width 0.25s ease, border-color 0.2s ease;
+    }
+    .search-input:focus { width: 260px; }
+    .search-icon {
+      position: absolute;
+      right: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* Category Filter Chips Bar */
+    .filter-bar {
+      padding: 9px 20px;
+      background: rgba(10, 15, 29, 0.65);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .filter-chip {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 4px 11px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .filter-chip:hover {
+      background: var(--panel-2);
+      color: var(--text);
+    }
+    .filter-chip.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.25));
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      position: relative;
+    }
+
+    /* Grid View */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 15px;
+    }
+    .file-card {
+      background: var(--panel-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .file-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 15px var(--accent-glow);
+      background: var(--panel-hover);
+    }
+    .file-icon {
+      font-size: 38px;
+      text-align: center;
+      padding: 12px 0;
+      transition: transform 0.2s ease;
+    }
+    .file-card:hover .file-icon {
+      transform: scale(1.08);
+    }
+    .file-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .file-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+    }
+    .file-actions {
+      display: flex;
+      gap: 5px;
+      justify-content: flex-end;
+      margin-top: 2px;
+      opacity: 0.85;
+      transition: opacity 0.15s ease;
+    }
+    .file-card:hover .file-actions { opacity: 1; }
+
+    /* List View */
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .file-table th, .file-table td {
+      padding: 12px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .file-table th {
+      color: var(--muted);
+      font-weight: 600;
+      background: rgba(22, 33, 56, 0.6);
+      font-size: 12.5px;
+    }
+    .file-table tr { cursor: pointer; transition: background 0.15s ease; }
+    .file-table tr:hover td { background: rgba(99, 102, 241, 0.08); }
+
+    /* Empty State */
+    .empty-state {
+      max-width: 520px;
+      margin: 60px auto;
+      text-align: center;
+      background: var(--panel-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px dashed var(--border);
+      border-radius: 22px;
+      padding: 44px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .empty-state .big-icon { font-size: 54px; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4)); }
+    .empty-state h2 { font-size: 20px; font-weight: 700; }
+    .empty-state p { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+
+    /* Drag overlay */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 11, 20, 0.9);
+      backdrop-filter: blur(8px);
+      border: 3px dashed var(--sky);
+      z-index: 300;
+      display: none;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--sky);
+      pointer-events: none;
+      animation: pulseBorder 1.5s infinite alternate;
+    }
+    .drop-overlay.visible { display: grid; }
+    @keyframes pulseBorder {
+      from { border-color: var(--accent); }
+      to { border-color: var(--sky); }
+    }
+
+    /* Modals & Dialogs */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 6, 12, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      place-items: center;
+      z-index: 400;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-backdrop.open { display: grid; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 490px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15);
+      animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .modal.wide { max-width: 920px; max-height: 92vh; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text); }
+    
+    .modal-body {
+      overflow: auto;
+      max-height: 72vh;
+      border-radius: 12px;
+    }
+
+    /* Media Preview Styles */
+    .preview-container {
+      position: relative;
+      background: #04070e;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+    }
+    .preview-toolbar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .preview-content-box {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview-image {
+      max-width: 100%;
+      max-height: 68vh;
+      border-radius: 8px;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+      transform-origin: center center;
+    }
+    .preview-video {
+      max-width: 100%;
+      max-height: 68vh;
+      border-radius: 8px;
+      outline: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .preview-audio-card {
+      width: 100%;
+      max-width: 500px;
+      background: var(--panel-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .audio-visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 48px;
+      padding: 6px 0;
+    }
+    .audio-bar {
+      width: 5px;
+      background: linear-gradient(180deg, var(--sky), var(--accent));
+      border-radius: 99px;
+      animation: soundWave 1.2s ease-in-out infinite alternate;
+    }
+    .audio-bar:nth-child(2) { animation-delay: 0.2s; height: 35px; }
+    .audio-bar:nth-child(3) { animation-delay: 0.4s; height: 48px; }
+    .audio-bar:nth-child(4) { animation-delay: 0.1s; height: 26px; }
+    .audio-bar:nth-child(5) { animation-delay: 0.3s; height: 40px; }
+    .audio-bar:nth-child(6) { animation-delay: 0.5s; height: 20px; }
+    @keyframes soundWave {
+      0% { height: 10px; }
+      100% { height: 46px; }
+    }
+
+    .modal-body iframe {
+      width: 100%;
+      height: 68vh;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .code-viewer-container {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .code-viewer-header {
+      background: #0f172a;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-body pre {
+      background: #090e1a;
+      padding: 16px;
+      overflow: auto;
+      direction: ltr;
+      text-align: left;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      max-height: 64vh;
+    }
+
+    /* Floating Upload Progress Manager */
+    .upload-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      width: 320px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-glow);
+      z-index: 350;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .upload-widget.active { display: flex; }
+    .upload-widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .upload-widget-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Mobile Bottom Navigation Bar */
+    .mobile-bottom-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: rgba(12, 18, 34, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      padding: 0 10px;
+    }
+    .mobile-nav-btn {
+      background: transparent;
+      color: var(--muted);
+      flex-direction: column;
+      gap: 3px;
+      font-size: 10.5px;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .mobile-nav-btn span.icon { font-size: 18px; }
+    .mobile-nav-btn:hover, .mobile-nav-btn.active { color: var(--text); }
+    .mobile-nav-fab {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--sky));
+      color: #fff;
+      font-size: 22px;
+      box-shadow: 0 6px 20px var(--accent-glow);
+      margin-top: -18px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 500;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      background: rgba(17, 24, 39, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      font-weight: 500;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+      animation: slideUp 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.success { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 8px 24px rgba(34, 197, 94, 0.2); }
+    .toast.error { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2); }
+    .toast.info { border-color: rgba(56, 189, 248, 0.5); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--sky);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Mobile Responsive Rules */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 180;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    @media (max-width: 860px) {
+      body { flex-direction: column; overflow: hidden; height: 100vh; }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 310px;
+        max-width: 86vw;
+        z-index: 200;
+        transform: translateX(105%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: none;
+        border-left: 1px solid var(--border);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: -15px 0 45px rgba(0, 0, 0, 0.7);
+      }
+      .sidebar-backdrop.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .mobile-menu-btn { display: inline-flex !important; }
+      .mobile-close-btn { display: inline-flex !important; }
+      .mobile-bottom-bar { display: flex !important; }
+      .content { padding-bottom: 80px !important; }
+      
+      .topbar { padding: 10px 14px; gap: 8px; }
+      .search-input { width: 140px; }
+      .search-input:focus { width: 180px; }
+
+      .file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+        gap: 10px !important;
+      }
+      .file-card { padding: 11px; }
+      .file-icon { font-size: 32px; padding: 6px 0; }
+      .upload-widget { right: 12px; left: 12px; width: auto; bottom: 74px; }
+      .toast-container { left: 12px; right: 12px; bottom: 74px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile Sidebar Backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebarDrawer()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="appSidebar">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="brand-icon">☁️</div>
+        <div class="brand-text">
+          <h1>הענן המאוחד</h1>
+          <p>Multi-Cloud Unified Storage</p>
+        </div>
+      </div>
+      <button class="mobile-close-btn" onclick="closeSidebarDrawer()" title="סגור תפריט">✕</button>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-primary" id="btnUpload">⬆️ העלה קבצים</button>
+      <button class="btn-secondary" id="btnNewFolder">📁 תיקייה חדשה</button>
+      <input type="file" id="fileInput" multiple hidden />
+    </div>
+
+    <!-- Total Pooled Storage -->
+    <div class="card">
+      <div class="card-header">
+        <span>📊 שטח אחסון מאוחד</span>
+        <span id="totalFreeBadge" style="color: var(--sky); font-size: 12px; font-weight:700;">טוען...</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="totalProgress" style="width: 0%"></div>
+      </div>
+      <div class="storage-numbers">
+        <span id="totalUsedText">0 GB בשימוש</span>
+        <span id="totalCapText">מתוך 0 GB</span>
+      </div>
+    </div>
+
+    <!-- Connected Accounts -->
+    <div class="card">
+      <div class="card-header">
+        <span>🔗 חשבונות ענן מחוברים</span>
+        <span id="accountsCount" style="color: var(--sky); font-size: 12px; font-weight: 700;">0</span>
+      </div>
+      <div id="accountsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div class="add-providers" id="addProvidersBox">
+        <button class="btn-primary btn-sm" style="background: linear-gradient(135deg, #2563eb, #38bdf8);" onclick="pickProvider('drive')">🔵 חבר חשבון Google Drive</button>
+        <button class="btn-secondary btn-sm" onclick="openProviderModal()">➕ שירותי ענן נוספים (8 ספקים)</button>
+        <button class="btn-secondary btn-sm" id="btnExportConfig" style="display:none; border-color:var(--sky); color:var(--sky);" onclick="exportConfigBase64()">💾 העתק קונפיג לשמירה ב-Render</button>
+      </div>
+    </div>
+
+    <!-- Advanced: Windows Drive Mount (Collapsible & Clutter-Free) -->
+    <details class="card" id="windowsMountCard" style="cursor: pointer;">
+      <summary class="card-header" style="list-style: none; user-select: none; display: flex; align-items: center; justify-content: space-between;">
+        <span>⚙️ כונן מקומי ב-Windows</span>
+        <span class="status-pill pill-off" id="mountPill">מנותק</span>
+      </summary>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px; cursor: default;">
+        <div id="winfspWarning" class="warn-box" style="display:none;">
+          כדי לחבר את הענן ככונן אמיתי במחשב (כמו <b>Z:\</b>), נדרשת התקנה חד-פעמית של <b>WinFsp</b>:
+          <div class="code-cmd" onclick="copyCmd(this)" title="לחץ להעתקה">winget install WinFsp.WinFsp</div>
+        </div>
+        <div class="mount-row">
+          <select id="driveSelect" style="width: 78px;">
+            <option value="Z">Z:\</option>
+            <option value="Y">Y:\</option>
+            <option value="X">X:\</option>
+            <option value="W">W:\</option>
+            <option value="M">M:\</option>
+            <option value="G">G:\</option>
+          </select>
+          <button class="btn-success btn-sm" id="btnMountToggle" style="flex:1;" onclick="toggleMount()">חבר כונן למחשב</button>
+        </div>
+        <button class="btn-secondary btn-sm" id="btnOpenExplorer" style="display:none;" onclick="openDriveInExplorer()">📂 פתח בסייר הקבצים</button>
+      </div>
+    </details>
+  </aside>
+
+  <!-- Main Workspace -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="mobile-menu-btn" onclick="toggleSidebarDrawer()">☰ תפריט</button>
+        <div class="breadcrumbs" id="breadcrumbs"></div>
+        <select id="activeRemoteSelect" onchange="onRemoteFilterChange()" style="font-size:12px; padding:4px 8px; border-radius:8px; background:var(--panel-2); color:var(--text); border:1px solid var(--border); margin-right:8px; max-width:210px;" title="בחר תצוגת ענן">
+          <option value="">🌐 כל הענן המאוחד (הכל)</option>
+        </select>
+      </div>
+      <div class="topbar-controls">
+        <div class="search-wrapper">
+          <input type="text" class="search-input" id="searchInput" placeholder="חיפוש קבצים..." />
+          <span class="search-icon">🔍</span>
+        </div>
+        <button class="btn-secondary btn-sm" id="btnViewToggle" onclick="toggleView()" title="החלף תצוגה">☰ רשימה</button>
+        <button class="btn-secondary btn-sm" onclick="refreshAll()" title="רענן נתונים">🔄</button>
+        <button class="btn-danger btn-sm" id="btnLogout" style="display:none;" onclick="logout()">🔒 התנתק</button>
+      </div>
+    </header>
+
+    <!-- Quick Category Filter Chips -->
+    <div class="filter-bar">
+      <button class="filter-chip active" data-filter="all" onclick="setCategoryFilter('all')">🌟 הכל</button>
+      <button class="filter-chip" data-filter="images" onclick="setCategoryFilter('images')">🖼️ תמונות</button>
+      <button class="filter-chip" data-filter="videos" onclick="setCategoryFilter('videos')">🎬 וידאו</button>
+      <button class="filter-chip" data-filter="audio" onclick="setCategoryFilter('audio')">🎵 שמע</button>
+      <button class="filter-chip" data-filter="docs" onclick="setCategoryFilter('docs')">📄 מסמכים</button>
+      <button class="filter-chip" data-filter="folders" onclick="setCategoryFilter('folders')">📁 תיקיות בלבד</button>
+    </div>
+
+    <!-- Files / Content Area -->
+    <section class="content" id="contentArea">
+      <div class="empty-state">
+        <div class="spinner" style="width:36px; height:36px;"></div>
+        <p>טוען את הענן המאוחד...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Dock -->
+  <nav class="mobile-bottom-bar">
+    <button class="mobile-nav-btn" onclick="loadFiles('')">
+      <span class="icon">🏠</span>
+      <span>ראשי</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="openPromptModal('newFolder')">
+      <span class="icon">📁</span>
+      <span>תיקייה</span>
+    </button>
+    <button class="mobile-nav-fab" onclick="document.getElementById('fileInput').click()" title="העלה קובץ">
+      ⬆️
+    </button>
+    <button class="mobile-nav-btn" onclick="toggleView()">
+      <span class="icon">⊞</span>
+      <span>תצוגה</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="toggleSidebarDrawer()">
+      <span class="icon">⚙️</span>
+      <span>חשבונות</span>
+    </button>
+  </nav>
+
+  <!-- Floating Upload Progress Widget -->
+  <div class="upload-widget" id="uploadWidget">
+    <div class="upload-widget-header">
+      <span id="uploadWidgetTitle">מעלה קבצים לענן...</span>
+      <span id="uploadPercent" style="color:var(--sky); font-weight:700;">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="uploadProgressBar" style="width: 0%"></div>
+    </div>
+    <div class="upload-widget-stats">
+      <span id="uploadCount">0 קבצים</span>
+      <span id="uploadSpeed">0 KB/s</span>
+    </div>
+  </div>
+
+  <!-- Drag & Drop Overlay -->
+  <div class="drop-overlay" id="dropOverlay">📥 שחרר כאן כדי להעלות לענן המאוחד</div>
+
+  <!-- Provider Picker Modal -->
+  <div class="modal-backdrop" id="providerModal" onclick="if(event.target===this) closeProviderModal()">
+    <div class="modal" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3>בחר אפליקציית ענן לחיבור</h3>
+        <button class="btn-secondary btn-sm" onclick="closeProviderModal()">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:11px;">
+        <button class="btn-primary" style="justify-content:space-between; padding:14px; grid-column: span 2; background: linear-gradient(135deg, #1d4ed8, #0284c7); font-size:14px;" onclick="pickProvider('drive')">
+          <span style="display:flex; align-items:center; gap:8px;">🔵 <b>Google Drive</b> (חשבון אישי / עבודה נוסף)</span>
+          <span style="background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">15GB חינם</span>
+        </button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px; grid-column: span 2; border-color: rgba(147, 51, 234, 0.45); background: rgba(147, 51, 234, 0.12); color:#e9d5ff;" onclick="pickProvider('shared_drive')">
+          <span style="display:flex; align-items:center; gap:8px;">📁 <b>Google Shared Drive</b> (כונן צוות / ארגון משותף)</span>
+          <span style="color:#c084fc; font-size:11px; font-weight:700;">ארגוני / שיתופי</span>
+        </button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('mega')"><span>🔴 MEGA</span><span style="color:var(--green); font-size:11px; font-weight:700;">20GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('webdav')"><span>🌐 WebDAV / Nextcloud</span><span style="color:var(--green); font-size:11px; font-weight:700;">ללא הגבלה</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('koofr')"><span>🟣 Koofr</span><span style="color:var(--green); font-size:11px; font-weight:700;">10GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('pcloud')"><span>🟢 pCloud</span><span style="color:var(--green); font-size:11px; font-weight:700;">10GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('yandex')"><span>🟡 Yandex Disk</span><span style="color:var(--green); font-size:11px; font-weight:700;">5GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('s3')"><span>🟠 Cloudflare R2 / S3</span><span style="color:var(--green); font-size:11px; font-weight:700;">10GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('onedrive')"><span>🔷 OneDrive / M365</span><span style="color:var(--sky); font-size:11px; font-weight:700;">5GB - 1TB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('box')"><span>🟦 Box</span><span style="color:var(--sky); font-size:11px; font-weight:700;">10GB</span></button>
+        <button class="btn-secondary" style="justify-content:space-between; padding:13px;" onclick="pickProvider('dropbox')"><span>📦 Dropbox</span><span style="color:var(--sky); font-size:11px; font-weight:700;">2GB</span></button>
+      </div>
+      <p style="font-size:11.5px; color:var(--muted); text-align:center;">
+        💡 ספקים עם סימון ירוק (WebDAV, Koofr, pCloud, Yandex, MEGA, Cloudflare R2) עובדים מיידית מכל טלפון ומחשב ללא צורך בהגדרות מוקדמות!
+      </p>
+    </div>
+  </div>
+
+  <!-- Google Account Label / Preset Modal -->
+  <div class="modal-backdrop" id="googleAccountModal" onclick="if(event.target===this) closeGoogleAccountModal()">
+    <div class="modal" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3>🔵 חיבור חשבון Google Drive</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closeGoogleAccountModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.5;">
+        בחר כינוי לחשבון כדי לנהל בקלות כמה חשבונות Google (אישי, עבודה, לימודים):
+      </p>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:9px; margin-top:4px;">
+        <button type="button" class="btn-secondary btn-sm" style="padding:10px;" onclick="submitGooglePreset('google_personal')">🏠 אישי (Personal)</button>
+        <button type="button" class="btn-secondary btn-sm" style="padding:10px;" onclick="submitGooglePreset('google_work')">💼 עבודה (Work)</button>
+        <button type="button" class="btn-secondary btn-sm" style="padding:10px;" onclick="submitGooglePreset('google_study')">🎓 לימודים (School)</button>
+        <button type="button" class="btn-secondary btn-sm" style="padding:10px;" onclick="submitGooglePreset(null)">⚡ שם אוטומטי</button>
+      </div>
+      <div style="margin-top:10px;">
+        <label style="font-size:12px; color:var(--muted);">או כינוי מותאם אישית (באנגלית/ספרות):</label>
+        <input type="text" id="customGoogleNameInput" placeholder="למשל: google_second..." style="width:100%; margin-top:4px;" />
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+        <button type="button" class="btn-secondary btn-sm" onclick="closeGoogleAccountModal()">ביטול</button>
+        <button type="button" class="btn-primary btn-sm" onclick="submitCustomGoogleAccount()">המשך להתחברות ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Shared Drives Modal -->
+  <div class="modal-backdrop" id="sharedDrivesModal" onclick="if(event.target===this) closeSharedDrivesModal()">
+    <div class="modal" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3>📁 כוננים משותפים של Google (Shared / Team Drives)</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closeSharedDrivesModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.5;">
+        כוננים משותפים (Team Drives) הם כוננים ארגוניים המשותפים לצוותים. כאן תוכל לסרוק ולחבר אותם ישירות לענן המאוחד שלך.
+      </p>
+      
+      <div style="background:#0f172a; border:1px solid var(--border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+        <label style="font-size:13px; font-weight:700; color:var(--text);">בחר חשבון Google מחובר לסריקה:</label>
+        <div style="display:flex; gap:8px;">
+          <select id="sharedDriveBaseSelect" style="flex:1;"></select>
+          <button class="btn-primary btn-sm" id="btnScanSharedDrives" onclick="scanSharedDrives()">🔍 סרוק כוננים</button>
+        </div>
+        <div id="sharedDrivesScanResult" style="margin-top:4px;"></div>
+      </div>
+
+      <div style="background:#0f172a; border:1px solid var(--border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+        <label style="font-size:13px; font-weight:700; color:var(--text);">או הזן מזהה כונן משותף ידנית (Shared Drive ID / Link):</label>
+        <input type="text" id="manualSharedDriveId" placeholder="מזהה כונן או קישור מ-Google Drive (למשל: 0ABC... או קישור)" style="width:100%; direction:ltr;" />
+        <input type="text" id="manualSharedDriveName" placeholder="כינוי לכונן (למשל: כונן פרויקטים)..." style="width:100%;" />
+        <button class="btn-secondary btn-sm" onclick="addManualSharedDrive()" style="align-self:flex-end;">➕ חבר כונן משותף לענן</button>
+      </div>
+      
+      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+        <button type="button" class="btn-secondary btn-sm" onclick="closeSharedDrivesModal()">סגור</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credentials Modal (WebDAV, Koofr, pCloud, Yandex, MEGA, Cloudflare R2 / S3) -->
+  <div class="modal-backdrop" id="credModal" onclick="if(event.target===this) closeCredModal()">
+    <form class="modal" onsubmit="submitCredAccount(event)" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 id="credModalTitle">חבר חשבון</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closeCredModal()">✕</button>
+      </div>
+      <p id="credModalHint" style="font-size:12.5px; color:var(--muted); line-height:1.5;"></p>
+
+      <!-- WebDAV specific fields -->
+      <div id="credWebdavFields" style="display:none; flex-direction:column; gap:10px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">כתובת שרת WebDAV (URL)</label>
+          <input type="text" id="credWebdavUrl" placeholder="https://cloud.example.com/remote.php/dav/files/user/" style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">סוג שרת (Vendor)</label>
+          <select id="credWebdavVendor" style="width:100%;">
+            <option value="other">פרוטוקול WebDAV סטנדרטי (Synology, TrueNAS, QNAP, Box WebDAV וכו')</option>
+            <option value="nextcloud">Nextcloud</option>
+            <option value="owncloud">ownCloud</option>
+            <option value="fastmail">Fastmail</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- pCloud Region selection -->
+      <div id="credPcloudFields" style="display:none; flex-direction:column; gap:6px;">
+        <label style="font-size:12px; color:var(--muted); display:block;">מיקום שרת pCloud</label>
+        <select id="credPcloudRegion" style="width:100%;">
+          <option value="global">שרת גלובלי / ארה"ב (webdav.pcloud.com)</option>
+          <option value="eu">שרת אירופאי (ewebdav.pcloud.com)</option>
+        </select>
+      </div>
+
+      <!-- User & Pass fields (MEGA, Koofr, WebDAV, pCloud, Yandex) -->
+      <div id="credUserPassFields" style="display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <label id="credUserLabel" style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">אימייל / שם משתמש</label>
+          <input type="text" id="credUser" placeholder="אימייל או שם משתמש..." style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label id="credPassLabel" style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">סיסמה / App Password</label>
+          <input type="password" id="credPass" placeholder="סיסמה או סיסמת אפליקציה..." style="width:100%;" />
+        </div>
+      </div>
+
+      <!-- S3 / Cloudflare R2 fields -->
+      <div id="credS3Fields" style="display:none; flex-direction:column; gap:10px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">S3 Endpoint</label>
+          <input type="text" id="credEndpoint" placeholder="https://<account-id>.r2.cloudflarestorage.com" style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">Access Key ID</label>
+          <input type="text" id="credAccessKey" placeholder="Access Key ID" style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">Secret Access Key</label>
+          <input type="password" id="credSecretKey" placeholder="Secret Access Key" style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">שם Bucket ספציפי (אופציונלי - מומלץ לטוקן R2 מוגבל)</label>
+          <input type="text" id="credBucket" placeholder="למשל: my-bucket (השאר ריק אם הטוקן כולל את כל ה-Buckets)" style="width:100%; direction:ltr;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">Region (אופציונלי - ברירת מחדל: auto / us-east-1)</label>
+          <input type="text" id="credRegion" placeholder="auto, us-east-1, eu-central-1 וכו'" style="width:100%; direction:ltr;" />
+        </div>
+      </div>
+
+      <!-- Custom remote name (optional) -->
+      <div>
+        <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">שם מזהה לענן (אופציונלי)</label>
+        <input type="text" id="credCustomName" placeholder="למשל: nextcloud_home (השאר ריק לברירת מחדל)" style="width:100%; direction:ltr;" />
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+        <div id="credAltAction"></div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-secondary btn-sm" onclick="closeCredModal()">ביטול</button>
+          <button type="submit" class="btn-primary btn-sm" id="btnSubmitCred">חבר חשבון לענן</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Auth Progress Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="authModalTitle">מתחבר לחשבון ענן...</h3>
+      </div>
+      <p style="font-size:13.5px; color:var(--muted); line-height:1.6;" id="authModalDesc">
+        נפתח חלון דפדפן להתחברות מאובטחת. בחר את החשבון שלך, אשר את הגישה, והחלון הזה ייסגר אוטומטית כשהחשבון יצורף לענן המאוחד!
+      </p>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px; background:#0b1120; border-radius:10px; border:1px solid var(--border);">
+        <span class="spinner"></span>
+        <span id="authStatusText" style="font-size:13px;">ממתין לאישור בדפדפן...</span>
+      </div>
+      <a id="authUrlBtn" href="#" target="_blank" class="btn-primary" style="display:none; text-decoration:none; text-align:center;">🔗 פתח דף התחברות בדפדפן</a>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn-danger btn-sm" onclick="cancelAuth()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Account by Token Modal (for Cloud Server / Render) -->
+  <div class="modal-backdrop" id="tokenModal" onclick="if(event.target===this) closeTokenModal()">
+    <form class="modal" onsubmit="submitTokenAccount(event)">
+      <div class="modal-header">
+        <h3 id="tokenModalTitle">חבר חשבון חדש</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+        1. הרץ במחשב שלך את הפקודה הזו לקבלת טוקן התחברות:
+      </p>
+      <div class="code-cmd" id="tokenCmdBox" onclick="copyCmd(this)" title="לחץ להעתקה">rclone authorize "drive"</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+        2. הדבק כאן את הטוקן שהתקבל (הטקסט שבין <code>---&gt;</code> ל־<code>&lt;---End paste</code>):
+      </p>
+      <textarea id="tokenTextarea" rows="4" required placeholder='{"access_token":"..."}' style="width:100%; background:#0b1120; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px; font-family:'JetBrains Mono', Consolas, monospace; font-size:12px; direction:ltr; resize:vertical;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-secondary btn-sm" onclick="closeTokenModal()">ביטול</button>
+        <button type="submit" class="btn-primary btn-sm" id="btnSubmitToken">חבר חשבון לענן</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Rich Media Preview Modal -->
+  <div class="modal-backdrop" id="previewModal" onclick="if(event.target===this) closePreview()">
+    <div class="modal wide">
+      <div class="modal-header">
+        <h3 id="previewTitle" style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">תצוגה מקדימה</h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <a id="previewDownloadBtn" class="btn-primary btn-sm" style="text-decoration:none;">⬇️ הורד</a>
+          <button class="btn-secondary btn-sm" onclick="closePreview()">✕ סגור</button>
+        </div>
+      </div>
+      <div class="modal-body" id="previewBody"></div>
+    </div>
+  </div>
+
+  <!-- Modern Input / Prompt Modal (for Folder & Rename) -->
+  <div class="modal-backdrop" id="promptModal" onclick="if(event.target===this) closePromptModal()">
+    <form class="modal" onsubmit="submitPromptModal(event)" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 id="promptModalTitle">פעולה</h3>
+        <button type="button" class="btn-secondary btn-sm" onclick="closePromptModal()">✕</button>
+      </div>
+      <p id="promptModalHint" style="font-size:13px; color:var(--muted);"></p>
+      <input type="text" id="promptInput" required style="width:100%; padding:10px 12px; font-size:14px;" />
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-secondary btn-sm" onclick="closePromptModal()">ביטול</button>
+        <button type="submit" class="btn-primary btn-sm" id="promptSubmitBtn">אישור</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Login Modal (for CLOUD_PASSWORD protection) -->
+  <div class="modal-backdrop" id="loginModal" style="background: rgba(7, 11, 20, 0.98); z-index: 600;">
+    <form class="modal" onsubmit="doLogin(event)" style="max-width: 390px;">
+      <div style="text-align:center;">
+        <div style="font-size:46px; margin-bottom:8px;">☁️🔒</div>
+        <h2 style="font-size:21px; font-weight:800;">הענן המאוחד שלי</h2>
+        <p style="font-size:13px; color:var(--muted); margin-top:4px;">הזן סיסמה כדי להיכנס לענן האישי שלך</p>
+      </div>
+      <input type="password" id="loginPassword" placeholder="סיסמת כניסה..." autocomplete="current-password" required style="width:100%; padding:12px; font-size:14px;" />
+      <div id="loginError" style="color:#fca5a5; font-size:12px; display:none;"></div>
+      <button type="submit" class="btn-primary" style="width:100%; padding:12px; font-size:14px;">כניסה לענן</button>
+    </form>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    let currentPath = '';
+    let currentItems = [];
+    let viewMode = 'grid';
+    let activeCategoryFilter = 'all';
+    let appStatus = { remotes: [], winfspInstalled: false, mounted: false, mountDrive: null };
+    let authPollTimer = null;
+
+    // Media Viewer State
+    let currentPreviewItem = null;
+    let previewImageZoom = 1;
+    let previewImageRotation = 0;
+
+    // Prompt Modal State
+    let promptCallback = null;
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(i >= 3 ? 2 : 1) + ' ' + units[i];
+    }
+
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      const icon = type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️';
+      el.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        el.style.transition = 'all 0.25s ease';
+        setTimeout(() => el.remove(), 250);
+      }, 4000);
+    }
+
+    function copyCmd(el) {
+      navigator.clipboard.writeText(el.textContent.trim());
+      toast('הפקודה הועתקה ללוח!', 'success');
+    }
+
+    function getFileCategory(name, isDir) {
+      if (isDir) return 'folders';
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      if (['png','jpg','jpeg','gif','webp','svg','bmp','ico'].includes(ext)) return 'images';
+      if (['mp4','webm','mov','mkv','avi','flv'].includes(ext)) return 'videos';
+      if (['mp3','wav','ogg','flac','m4a','aac'].includes(ext)) return 'audio';
+      if (['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','md','csv'].includes(ext)) return 'docs';
+      return 'other';
+    }
+
+    function getFileIcon(item) {
+      if (item.isDir) return '📁';
+      const ext = (item.name.split('.').pop() || '').toLowerCase();
+      if (['png','jpg','jpeg','gif','webp','svg','bmp'].includes(ext)) return '🖼️';
+      if (['mp4','webm','mov','mkv','avi'].includes(ext)) return '🎬';
+      if (['mp3','wav','ogg','flac','m4a'].includes(ext)) return '🎵';
+      if (ext === 'pdf') return '📕';
+      if (['doc','docx','odt','rtf'].includes(ext)) return '📘';
+      if (['xls','xlsx','csv'].includes(ext)) return '📗';
+      if (['zip','rar','7z','tar','gz'].includes(ext)) return '🗜️';
+      if (['js','ts','py','html','css','json','md','txt'].includes(ext)) return '📄';
+      return '📎';
+    }
+
+    function providerLabel(type, name = '') {
+      const n = (name || '').toLowerCase();
+      if (type === 'drive' || n.startsWith('drive') || n.startsWith('google')) return { text: 'Google', cls: 'badge-drive' };
+      if (type === 'onedrive' || n.startsWith('onedrive')) return { text: 'OneDrive / M365', cls: 'badge-onedrive' };
+      if (type === 'dropbox' || n.startsWith('dropbox')) return { text: 'Dropbox', cls: 'badge-dropbox' };
+      if (type === 'mega' || n.startsWith('mega')) return { text: 'MEGA', cls: 'badge-mega' };
+      if (type === 'pcloud' || n.startsWith('pcloud')) return { text: 'pCloud', cls: 'badge-drive' };
+      if (type === 'box' || n.startsWith('box')) return { text: 'Box', cls: 'badge-box' };
+      if (type === 'koofr' || n.startsWith('koofr')) return { text: 'Koofr', cls: 'badge-koofr' };
+      if (type === 'yandex' || n.startsWith('yandex')) return { text: 'Yandex', cls: 'badge-yandex' };
+      if (type === 'webdav' || n.startsWith('webdav') || n.startsWith('nextcloud') || n.startsWith('owncloud')) return { text: 'WebDAV', cls: 'badge-webdav' };
+      if (type === 's3' || n.startsWith('r2') || n.startsWith('s3')) return { text: 'Cloudflare R2 / S3', cls: 'badge-s3' };
+      return { text: type, cls: 'badge-other' };
+    }
+
+    // Sidebar Mobile Drawer Control
+    function toggleSidebarDrawer() {
+      const sb = document.getElementById('appSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      const isOpen = sb.classList.contains('open');
+      if (isOpen) {
+        closeSidebarDrawer();
+      } else {
+        sb.classList.add('open');
+        bd.classList.add('visible');
+      }
+    }
+
+    function closeSidebarDrawer() {
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarBackdrop').classList.remove('visible');
+    }
+
+    // Filter Chips
+    function setCategoryFilter(cat) {
+      activeCategoryFilter = cat;
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === cat);
+      });
+      renderFiles();
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (!data.ok) return;
+        appStatus = data;
+
+        document.getElementById('accountsCount').textContent = data.remotes.length;
+        document.getElementById('btnLogout').style.display = data.authRequired ? 'inline-flex' : 'none';
+        document.getElementById('windowsMountCard').style.display = data.isWindows ? 'flex' : 'none';
+        document.getElementById('btnExportConfig').style.display = data.isWindows ? 'none' : 'inline-flex';
+        document.getElementById('winfspWarning').style.display = data.winfspInstalled ? 'none' : 'block';
+
+        const pill = document.getElementById('mountPill');
+        const btnMount = document.getElementById('btnMountToggle');
+        const btnOpen = document.getElementById('btnOpenExplorer');
+        const driveSel = document.getElementById('driveSelect');
+
+        if (data.mounted) {
+          pill.textContent = `מחובר (${data.mountDrive}:\\)`;
+          pill.className = 'status-pill pill-on';
+          btnMount.textContent = 'נתק כונן';
+          btnMount.className = 'btn-danger btn-sm';
+          btnOpen.style.display = 'inline-flex';
+          driveSel.value = data.mountDrive;
+          driveSel.disabled = true;
+        } else {
+          pill.textContent = 'מנותק';
+          pill.className = 'status-pill pill-off';
+          btnMount.textContent = 'חבר כונן למחשב';
+          btnMount.className = 'btn-success btn-sm';
+          btnOpen.style.display = 'none';
+          driveSel.disabled = false;
+        }
+      } catch (err) {
+        console.error('Error loading status:', err);
+      }
+    }
+
+    async function loadStorage() {
+      const listEl = document.getElementById('accountsList');
+      try {
+        const res = await fetch('/api/storage');
+        const data = await res.json();
+        if (!data.ok) return;
+
+        const pct = data.total > 0 ? Math.min(100, (data.used / data.total) * 100) : 0;
+        document.getElementById('totalProgress').style.width = pct.toFixed(1) + '%';
+        document.getElementById('totalUsedText').textContent = `${formatBytes(data.used)} בשימוש`;
+        document.getElementById('totalCapText').textContent = `מתוך ${formatBytes(data.total)}`;
+        document.getElementById('totalFreeBadge').textContent = `${formatBytes(data.free)} פנוי`;
+
+        if (data.accounts.length === 0) {
+          listEl.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:10px 0;">עדיין לא חוברו חשבונות ענן</div>';
+          return;
+        }
+
+        listEl.innerHTML = data.accounts.map(acc => {
+          const p = providerLabel(acc.type, acc.name);
+          const isUnlimited = Boolean(acc.unlimited);
+          const apct = isUnlimited ? 100 : (acc.total > 0 ? Math.min(100, (acc.used / acc.total) * 100) : 0);
+          const leftText = acc.error ? 'שגיאת קריאה' : (isUnlimited ? 'אחסון אובייקטים (ללא הגבלה)' : `${formatBytes(acc.used)} / ${formatBytes(acc.total)}`);
+          const rightText = acc.error ? '' : (isUnlimited ? 'פעיל ומחובר' : `${formatBytes(acc.free)} פנוי`);
+          const barStyle = isUnlimited ? 'background: linear-gradient(90deg, #f97316, #fb923c); width: 100%;' : `width:${apct.toFixed(1)}%`;
+          return `
+            <div class="account-item">
+              <div class="account-top">
+                <div class="account-name">
+                  <span class="provider-badge ${p.cls}">${p.text}</span>
+                  <span>${escapeHtml(acc.name)}</span>
+                </div>
+                <button class="btn-danger btn-sm" style="padding:2px 7px; font-size:11px;" onclick="removeAccount('${escapeHtml(acc.name)}')" title="נתק חשבון">✕</button>
+              </div>
+              <div class="progress-bar" style="height:5px;">
+                <div class="progress-fill" style="${barStyle}"></div>
+              </div>
+              <div class="storage-numbers" style="font-size:11px;">
+                <span>${leftText}</span>
+                <span>${rightText}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Error loading storage:', err);
+      }
+    }
+
+    async function loadFiles(pathStr = currentPath) {
+      currentPath = pathStr;
+      renderBreadcrumbs();
+      const area = document.getElementById('contentArea');
+      area.innerHTML = '<div class="empty-state"><div class="spinner" style="width:36px;height:36px;"></div><p>טוען קבצים מהענן המאוחד...</p></div>';
+
+      try {
+        const res = await fetch('/api/files?path=' + encodeURIComponent(currentPath));
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+
+        if (data.emptyCloud) {
+          currentItems = [];
+          area.innerHTML = `
+            <div class="empty-state">
+              <div class="big-icon">☁️✨</div>
+              <h2>ברוך הבא לענן המאוחד שלך!</h2>
+              <p>כל שירותי הענן והקבצים שלך מתנקזים לאתר אחד פשוט, מהיר ונקי — בלי סיבוכים ובלי דברים מיותרים.</p>
+              <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:14px;">
+                <button class="btn-primary" style="background: linear-gradient(135deg, #1d4ed8, #0284c7); font-size:14px; padding:12px 20px;" onclick="pickProvider('drive')">🔵 חבר חשבון Google Drive בלחיצה</button>
+                <button class="btn-secondary" style="font-size:14px; padding:12px 20px;" onclick="openProviderModal()">➕ שירותי ענן נוספים</button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        currentItems = data.items || [];
+        renderFiles();
+      } catch (err) {
+        area.innerHTML = `<div class="empty-state"><div class="big-icon">⚠️</div><h2>שגיאה בטעינת הקבצים</h2><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderBreadcrumbs() {
+      const bc = document.getElementById('breadcrumbs');
+      const parts = currentPath ? currentPath.split('/') : [];
+      let html = `<span class="crumb ${parts.length === 0 ? 'active' : ''}" onclick="loadFiles('')">🏠 הענן שלי</span>`;
+      let accum = '';
+      parts.forEach((p, idx) => {
+        accum = accum ? `${accum}/${p}` : p;
+        const isLast = idx === parts.length - 1;
+        html += `<span style="color:var(--muted)">/</span><span class="crumb ${isLast ? 'active' : ''}" onclick="loadFiles('${escapeAttr(accum)}')">${escapeHtml(p)}</span>`;
+      });
+      bc.innerHTML = html;
+    }
+
+    function renderFiles() {
+      const area = document.getElementById('contentArea');
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      
+      let filtered = currentItems;
+      if (q) {
+        filtered = filtered.filter(i => i.name.toLowerCase().includes(q));
+      }
+      if (activeCategoryFilter !== 'all') {
+        filtered = filtered.filter(i => getFileCategory(i.name, i.isDir) === activeCategoryFilter);
+      }
+
+      if (filtered.length === 0) {
+        area.innerHTML = `
+          <div class="empty-state">
+            <div class="big-icon">📂</div>
+            <h2>${q ? 'לא נמצאו קבצים תואמים' : activeCategoryFilter !== 'all' ? 'אין קבצים בקטגוריה זו' : 'התיקייה הזו ריקה'}</h2>
+            <p>${q ? 'נסה מילת חיפוש אחרת.' : 'גרור לכאן קבצים מהמחשב או לחץ על "העלה קבצים" כדי להוסיף קבצים.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (viewMode === 'grid') {
+        area.innerHTML = `<div class="file-grid">${filtered.map(item => `
+          <div class="file-card" onclick="openItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">
+            <div class="file-icon">${getFileIcon(item)}</div>
+            <div class="file-name" title="${escapeAttr(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="file-meta">
+              <span>${item.isDir ? 'תיקייה' : formatBytes(item.size)}</span>
+              <span>${item.modTime ? new Date(item.modTime).toLocaleDateString('he-IL') : ''}</span>
+            </div>
+            <div class="file-actions" onclick="event.stopPropagation()">
+              ${!item.isDir ? `<button class="btn-secondary btn-sm" style="padding:4px 7px;" title="הורד קובץ" onclick="downloadItem('${escapeAttr(item.path)}', ${item.size || 0})">⬇️</button>` : ''}
+              <button class="btn-secondary btn-sm" style="padding:4px 7px;" title="שנה שם" onclick="renameItem('${escapeAttr(item.path)}', '${escapeAttr(item.name)}')">✏️</button>
+              <button class="btn-danger btn-sm" style="padding:4px 7px;" title="מחק" onclick="deleteItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">🗑️</button>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      } else {
+        area.innerHTML = `
+          <table class="file-table">
+            <thead>
+              <tr>
+                <th>שם הקובץ</th>
+                <th>גודל</th>
+                <th>תאריך שינוי</th>
+                <th style="width:140px; text-align:center;">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(item => `
+                <tr onclick="openItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">
+                  <td><span style="margin-left:8px;">${getFileIcon(item)}</span><b>${escapeHtml(item.name)}</b></td>
+                  <td>${item.isDir ? '—' : formatBytes(item.size)}</td>
+                  <td>${item.modTime ? new Date(item.modTime).toLocaleString('he-IL') : ''}</td>
+                  <td onclick="event.stopPropagation()" style="text-align:center;">
+                    ${!item.isDir ? `<button class="btn-secondary btn-sm" style="padding:4px 7px;" title="הורד" onclick="downloadItem('${escapeAttr(item.path)}', ${item.size || 0})">⬇️</button>` : ''}
+                    <button class="btn-secondary btn-sm" style="padding:4px 7px;" title="שנה שם" onclick="renameItem('${escapeAttr(item.path)}', '${escapeAttr(item.name)}')">✏️</button>
+                    <button class="btn-danger btn-sm" style="padding:4px 7px;" title="מחק" onclick="deleteItem('${escapeAttr(item.path)}', ${item.isDir}, '${escapeAttr(item.name)}')">🗑️</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
+    function toggleView() {
+      viewMode = viewMode === 'grid' ? 'list' : 'grid';
+      document.getElementById('btnViewToggle').textContent = viewMode === 'grid' ? '☰ רשימה' : '⊞ אריחים';
+      renderFiles();
+    }
+
+    // Media Preview Player
+    function openItem(itemPath, isDir, name) {
+      if (isDir) {
+        loadFiles(itemPath);
+        return;
+      }
+      currentPreviewItem = { path: itemPath, name };
+      previewImageZoom = 1;
+      previewImageRotation = 0;
+
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      const itemSize = item && item.size ? `&size=${item.size}` : '';
+      const inlineUrl = `/api/download?path=${encodeURIComponent(itemPath)}&inline=1${itemSize}`;
+      const downloadUrl = `/api/download?path=${encodeURIComponent(itemPath)}${itemSize}`;
+
+      const modal = document.getElementById('previewModal');
+      const body = document.getElementById('previewBody');
+      document.getElementById('previewTitle').textContent = name;
+      document.getElementById('previewDownloadBtn').href = downloadUrl;
+
+      // Image
+      if (['png','jpg','jpeg','gif','webp','svg','bmp','ico'].includes(ext)) {
+        const imageItems = currentItems.filter(i => !i.isDir && ['png','jpg','jpeg','gif','webp','svg','bmp','ico'].includes((i.name.split('.').pop()||'').toLowerCase()));
+        const currentIndex = imageItems.findIndex(i => i.path === itemPath);
+        const hasPrev = currentIndex > 0;
+        const hasNext = currentIndex < imageItems.length - 1;
+
+        body.innerHTML = `
+          <div class="preview-container">
+            <div class="preview-toolbar">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button class="btn-secondary btn-sm" onclick="zoomImage(0.25)">🔍+ זום</button>
+                <button class="btn-secondary btn-sm" onclick="zoomImage(-0.25)">🔍-</button>
+                <button class="btn-secondary btn-sm" onclick="resetImageTransform()">🔄 איפוס</button>
+                <button class="btn-secondary btn-sm" onclick="rotateImage(90)">↷ סובב</button>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                ${hasPrev ? `<button class="btn-secondary btn-sm" onclick="openItem('${escapeAttr(imageItems[currentIndex-1].path)}', false, '${escapeAttr(imageItems[currentIndex-1].name)}')">➡️ קודם</button>` : ''}
+                ${hasNext ? `<button class="btn-secondary btn-sm" onclick="openItem('${escapeAttr(imageItems[currentIndex+1].path)}', false, '${escapeAttr(imageItems[currentIndex+1].name)}')">הבא ⬅️</button>` : ''}
+              </div>
+            </div>
+            <div class="preview-content-box">
+              <img id="activePreviewImg" class="preview-image" src="${inlineUrl}" alt="${escapeAttr(name)}" />
+            </div>
+          </div>
+        `;
+        modal.classList.add('open');
+      } 
+      // Video
+      else if (['mp4','webm','mov','mkv','avi'].includes(ext)) {
+        body.innerHTML = `
+          <div class="preview-container">
+            <div class="preview-toolbar">
+              <span style="font-size:12px; color:var(--muted);">מהירות ניגון:</span>
+              <div style="display:flex; gap:4px;">
+                <button class="btn-secondary btn-sm" onclick="setVideoSpeed(0.75)">0.75x</button>
+                <button class="btn-secondary btn-sm" onclick="setVideoSpeed(1.0)">1.0x</button>
+                <button class="btn-secondary btn-sm" onclick="setVideoSpeed(1.25)">1.25x</button>
+                <button class="btn-secondary btn-sm" onclick="setVideoSpeed(1.5)">1.5x</button>
+                <button class="btn-secondary btn-sm" onclick="setVideoSpeed(2.0)">2.0x</button>
+              </div>
+            </div>
+            <div class="preview-content-box" style="padding:10px;">
+              <video id="activePreviewVideo" class="preview-video" src="${inlineUrl}" controls autoplay></video>
+            </div>
+          </div>
+        `;
+        modal.classList.add('open');
+      } 
+      // Audio
+      else if (['mp3','wav','ogg','flac','m4a','aac'].includes(ext)) {
+        body.innerHTML = `
+          <div class="preview-container" style="padding: 30px 10px;">
+            <div class="preview-audio-card">
+              <div style="font-size: 42px;">🎵</div>
+              <div style="font-size: 15px; font-weight:700; text-align:center;">${escapeHtml(name)}</div>
+              <div class="audio-visualizer">
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+              </div>
+              <audio id="activePreviewAudio" src="${inlineUrl}" controls autoplay style="width:100%;"></audio>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-secondary btn-sm" onclick="skipAudio(-10)">⏪ 10- שניות</button>
+                <button class="btn-secondary btn-sm" onclick="skipAudio(10)">10+ שניות ⏩</button>
+              </div>
+            </div>
+          </div>
+        `;
+        modal.classList.add('open');
+      } 
+      // PDF
+      else if (ext === 'pdf') {
+        body.innerHTML = `
+          <div class="preview-container">
+            <div class="preview-toolbar">
+              <a href="${inlineUrl}" target="_blank" class="btn-secondary btn-sm" style="text-decoration:none;">🔗 פתח בכרטיסייה חדשה</a>
+            </div>
+            <iframe src="${inlineUrl}"></iframe>
+          </div>
+        `;
+        modal.classList.add('open');
+      } 
+      // Text & Code
+      else if (['txt','md','json','csv','log','js','html','css','py','ts','yaml','yml','sql','sh','bat'].includes(ext)) {
+        body.innerHTML = '<div style="text-align:center; padding:30px;"><span class="spinner"></span><p style="margin-top:8px; font-size:13px; color:var(--muted);">טוען מסמך...</p></div>';
+        modal.classList.add('open');
+        fetch(inlineUrl).then(r => r.text()).then(txt => {
+          body.innerHTML = `
+            <div class="code-viewer-container">
+              <div class="code-viewer-header">
+                <span>${ext.toUpperCase()} Source File</span>
+                <button class="btn-secondary btn-sm" onclick="copyCodeContent()">📋 העתק הכל ללוח</button>
+              </div>
+              <pre id="codePreviewContent">${escapeHtml(txt.slice(0, 150000))}</pre>
+            </div>
+          `;
+        }).catch(err => {
+          body.innerHTML = `<div class="empty-state"><h3>שגיאה בטעינת הקובץ</h3><p>${escapeHtml(err.message)}</p></div>`;
+        });
+      } 
+      // Fallback
+      else {
+        downloadItem(itemPath);
+      }
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('open');
+      document.getElementById('previewBody').innerHTML = '';
+      currentPreviewItem = null;
+    }
+
+    function zoomImage(delta) {
+      previewImageZoom = Math.max(0.5, Math.min(3.5, previewImageZoom + delta));
+      applyImageTransform();
+    }
+    function rotateImage(deg) {
+      previewImageRotation = (previewImageRotation + deg) % 360;
+      applyImageTransform();
+    }
+    function resetImageTransform() {
+      previewImageZoom = 1;
+      previewImageRotation = 0;
+      applyImageTransform();
+    }
+    function applyImageTransform() {
+      const img = document.getElementById('activePreviewImg');
+      if (img) img.style.transform = `scale(${previewImageZoom}) rotate(${previewImageRotation}deg)`;
+    }
+
+    function setVideoSpeed(rate) {
+      const vid = document.getElementById('activePreviewVideo');
+      if (vid) vid.playbackRate = rate;
+      toast(`מהירות: ${rate}x`, 'info');
+    }
+
+    function skipAudio(seconds) {
+      const aud = document.getElementById('activePreviewAudio');
+      if (aud) aud.currentTime = Math.max(0, aud.currentTime + seconds);
+    }
+
+    function copyCodeContent() {
+      const code = document.getElementById('codePreviewContent');
+      if (code) {
+        navigator.clipboard.writeText(code.innerText);
+        toast('תוכן הקוד הועתק ללוח!', 'success');
+      }
+    }
+
+    function downloadItem(itemPath, size) {
+      const sizeParam = size ? `&size=${size}` : '';
+      window.location.href = `/api/download?path=${encodeURIComponent(itemPath)}${sizeParam}`;
+    }
+
+    // Modern Upload Experience with Progress
+    function uploadFiles(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const formData = new FormData();
+      for (const f of fileList) formData.append('files', f);
+
+      const widget = document.getElementById('uploadWidget');
+      const pBar = document.getElementById('uploadProgressBar');
+      const pText = document.getElementById('uploadPercent');
+      const countText = document.getElementById('uploadCount');
+      const speedText = document.getElementById('uploadSpeed');
+
+      widget.classList.add('active');
+      countText.textContent = `${fileList.length} קבצים בהעלאה`;
+      pBar.style.width = '0%';
+      pText.textContent = '0%';
+      speedText.textContent = 'מחשב מהירות...';
+
+      const xhr = new XMLHttpRequest();
+      const startTime = Date.now();
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          pBar.style.width = percent + '%';
+          pText.textContent = percent + '%';
+          const elapsed = (Date.now() - startTime) / 1000;
+          if (elapsed > 0) {
+            const speed = e.loaded / elapsed;
+            speedText.textContent = formatBytes(speed) + '/s';
+          }
+        }
+      };
+
+      xhr.onload = async () => {
+        widget.classList.remove('active');
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (!data.ok) throw new Error(data.error);
+          toast(`הועלו ${data.uploaded.length} קבצים בהצלחה לענן!`, 'success');
+          await Promise.all([loadFiles(), loadStorage()]);
+        } catch (err) {
+          toast('שגיאה בהעלאה: ' + err.message, 'error');
+        }
+      };
+
+      xhr.onerror = () => {
+        widget.classList.remove('active');
+        toast('שגיאת רשת במהלך ההעלאה', 'error');
+      };
+
+      xhr.open('POST', '/api/upload?path=' + encodeURIComponent(currentPath));
+      xhr.send(formData);
+    }
+
+    // Prompt Modal Control (Replacements for prompt)
+    function openPromptModal(type, defaultValue = '', targetPath = '') {
+      const modal = document.getElementById('promptModal');
+      const title = document.getElementById('promptModalTitle');
+      const hint = document.getElementById('promptModalHint');
+      const input = document.getElementById('promptInput');
+
+      if (type === 'newFolder') {
+        title.textContent = 'יצירת תיקייה חדשה';
+        hint.textContent = 'הזן שם עבור התיקייה החדשה בענן:';
+        input.value = '';
+        input.placeholder = 'שם תיקייה...';
+        promptCallback = async (val) => {
+          const res = await fetch('/api/mkdir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: currentPath, name: val.trim() })
+          });
+          const data = await res.json();
+          if (!data.ok) return toast(data.error, 'error');
+          toast('התיקייה נוצרה בהצלחה!', 'success');
+          loadFiles();
+        };
+      } else if (type === 'rename') {
+        title.textContent = 'שינוי שם פריט';
+        hint.textContent = 'הזן שם חדש לקובץ או לתיקייה:';
+        input.value = defaultValue;
+        input.placeholder = 'שם חדש...';
+        promptCallback = async (val) => {
+          if (val.trim() === defaultValue) return;
+          const res = await fetch('/api/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldPath: targetPath, newName: val.trim() })
+          });
+          const data = await res.json();
+          if (!data.ok) return toast(data.error, 'error');
+          toast('השם שונה בהצלחה!', 'success');
+          loadFiles();
+        };
+      }
+
+      modal.classList.add('open');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closePromptModal() {
+      document.getElementById('promptModal').classList.remove('open');
+      promptCallback = null;
+    }
+
+    function submitPromptModal(e) {
+      e.preventDefault();
+      const val = document.getElementById('promptInput').value;
+      if (promptCallback && val && val.trim()) {
+        promptCallback(val);
+      }
+      closePromptModal();
+    }
+
+    function createFolder() {
+      openPromptModal('newFolder');
+    }
+
+    function renameItem(oldPath, oldName) {
+      openPromptModal('rename', oldName, oldPath);
+    }
+
+    async function deleteItem(itemPath, isDir, name) {
+      if (!confirm(`למחוק את "${name}" מהענן המאוחד?`)) return;
+      try {
+        const res = await fetch(`/api/files?path=${encodeURIComponent(itemPath)}&isDir=${isDir}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (!data.ok) return toast(data.error, 'error');
+        toast('הפריט נמחק בהצלחה.', 'success');
+        await Promise.all([loadFiles(), loadStorage()]);
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    // Provider Modals
+    let pendingTokenProvider = null;
+    let pendingCredProvider = null;
+
+    function openProviderModal() {
+      document.getElementById('providerModal').classList.add('open');
+    }
+    function closeProviderModal() {
+      document.getElementById('providerModal').classList.remove('open');
+    }
+    function closeCredModal() {
+      document.getElementById('credModal').classList.remove('open');
+      document.getElementById('credUser').value = '';
+      document.getElementById('credPass').value = '';
+      document.getElementById('credEndpoint').value = '';
+      document.getElementById('credAccessKey').value = '';
+      document.getElementById('credSecretKey').value = '';
+      if (document.getElementById('credWebdavUrl')) document.getElementById('credWebdavUrl').value = '';
+      if (document.getElementById('credCustomName')) document.getElementById('credCustomName').value = '';
+      if (document.getElementById('credAltAction')) document.getElementById('credAltAction').innerHTML = '';
+      pendingCredProvider = null;
+    }
+
+    function pickProvider(provider) {
+      closeProviderModal();
+      const directProviders = ['mega', 'koofr', 's3', 'webdav', 'pcloud', 'yandex'];
+      if (directProviders.includes(provider)) {
+        pendingCredProvider = provider;
+        const isS3 = provider === 's3';
+        const isWebdav = provider === 'webdav';
+        const isPcloud = provider === 'pcloud';
+        const isYandex = provider === 'yandex';
+        const isKoofr = provider === 'koofr';
+        const isMega = provider === 'mega';
+
+        document.getElementById('credUserPassFields').style.display = isS3 ? 'none' : 'flex';
+        document.getElementById('credS3Fields').style.display = isS3 ? 'flex' : 'none';
+        document.getElementById('credWebdavFields').style.display = isWebdav ? 'flex' : 'none';
+        document.getElementById('credPcloudFields').style.display = isPcloud ? 'flex' : 'none';
+
+        const userLabel = document.getElementById('credUserLabel');
+        const userInput = document.getElementById('credUser');
+        const passLabel = document.getElementById('credPassLabel');
+        const passInput = document.getElementById('credPass');
+        const altAction = document.getElementById('credAltAction');
+        altAction.innerHTML = '';
+
+        if (isWebdav) {
+          document.getElementById('credModalTitle').textContent = '🌐 חבר שרת WebDAV / Nextcloud / ownCloud';
+          document.getElementById('credModalHint').textContent = 'הזן את כתובת שרת ה-WebDAV, שם משתמש וסיסמה או App Password / Token.';
+          userLabel.textContent = 'שם משתמש (אופציונלי לשרת פתוח)';
+          userInput.placeholder = 'username...';
+          passLabel.textContent = 'סיסמה / App Password (אופציונלי)';
+          passInput.placeholder = 'password...';
+        } else if (isKoofr) {
+          document.getElementById('credModalTitle').textContent = '🟣 חבר חשבון Koofr (10GB)';
+          document.getElementById('credModalHint').textContent = 'הזן אימייל ו-App Password שנוצר בהגדרות החשבון של Koofr (Preferences → Password → Generate password for rclone).';
+          userLabel.textContent = 'אימייל החשבון ב-Koofr';
+          userInput.placeholder = 'user@example.com';
+          passLabel.textContent = 'Koofr App Password';
+          passInput.placeholder = 'App password...';
+        } else if (isPcloud) {
+          document.getElementById('credModalTitle').textContent = '🟢 חבר חשבון pCloud (10GB)';
+          document.getElementById('credModalHint').textContent = 'חיבור ישיר ומאובטח באמצעות פרוטוקול WebDAV של pCloud (עובד מכל מכשיר ללא צורך בהגדרות).';
+          userLabel.textContent = 'אימייל החשבון ב-pCloud';
+          userInput.placeholder = 'user@example.com';
+          passLabel.textContent = 'סיסמת החשבון ב-pCloud';
+          passInput.placeholder = 'סיסמה...';
+          altAction.innerHTML = '<a href="javascript:void(0)" onclick="closeCredModal(); startAddAccount(\'pcloud\')" style="color:var(--sky); text-decoration:none; font-size:12px;">או התחבר עם OAuth בדפדפן ←</a>';
+        } else if (isYandex) {
+          document.getElementById('credModalTitle').textContent = '🟡 חבר Yandex Disk (5GB)';
+          document.getElementById('credModalHint').textContent = 'הזן אימייל ו-App Password שנוצר באבטחת Yandex ID (Security → Passwords for apps → WebDAV).';
+          userLabel.textContent = 'אימייל / שם משתמש ב-Yandex';
+          userInput.placeholder = 'username@yandex.com';
+          passLabel.textContent = 'Yandex App Password';
+          passInput.placeholder = 'App password...';
+          altAction.innerHTML = '<a href="javascript:void(0)" onclick="closeCredModal(); startAddAccount(\'yandex\')" style="color:var(--sky); text-decoration:none; font-size:12px;">או התחבר עם OAuth בדפדפן ←</a>';
+        } else if (isMega) {
+          document.getElementById('credModalTitle').textContent = '🔴 חבר חשבון MEGA (20GB מוצפן)';
+          document.getElementById('credModalHint').textContent = 'הזן את האימייל והסיסמה של חשבון ה-MEGA שלך. האחסון מוצפן מקצה לקצה ועובד מכל מכשיר!';
+          userLabel.textContent = 'אימייל החשבון ב-MEGA';
+          userInput.placeholder = 'user@example.com';
+          passLabel.textContent = 'סיסמת MEGA';
+          passInput.placeholder = 'סיסמה...';
+        } else {
+          document.getElementById('credModalTitle').textContent = '🟠 חבר Cloudflare R2 / שרתי S3 (10GB חינם)';
+          document.getElementById('credModalHint').textContent = 'הזן את פרטי ה-API Token מ-Cloudflare R2 (או כל שרת תואם S3 כגון Wasabi, MinIO או AWS). מומלץ לציין שם Bucket אם הטוקן מוגבל.';
+        }
+
+        document.getElementById('credModal').classList.add('open');
+        return;
+      }
+      startAddAccount(provider);
+    }
+
+    async function submitCredAccount(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitCred');
+      btn.disabled = true;
+      btn.textContent = 'מחבר...';
+      try {
+        const customNameVal = (document.getElementById('credCustomName') ? document.getElementById('credCustomName').value : '').trim();
+        const body = {
+          provider: pendingCredProvider,
+          user: document.getElementById('credUser').value.trim(),
+          password: document.getElementById('credPass').value,
+          url: document.getElementById('credWebdavUrl') ? document.getElementById('credWebdavUrl').value.trim() : '',
+          vendor: document.getElementById('credWebdavVendor') ? document.getElementById('credWebdavVendor').value : 'other',
+          endpoint: pendingCredProvider === 's3'
+            ? document.getElementById('credEndpoint').value.trim()
+            : (document.getElementById('credPcloudRegion') ? document.getElementById('credPcloudRegion').value : ''),
+          accessKey: document.getElementById('credAccessKey').value.trim(),
+          secretKey: document.getElementById('credSecretKey').value.trim(),
+          bucket: document.getElementById('credBucket') ? document.getElementById('credBucket').value.trim() : '',
+          region: document.getElementById('credRegion') ? document.getElementById('credRegion').value.trim() : '',
+          customName: customNameVal || undefined
+        };
+        const res = await fetch('/api/accounts/add-credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        closeCredModal();
+        toast(`החשבון ${data.name} חובר בהצלחה לענן המאוחד!`, 'success');
+        refreshAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'חבר חשבון לענן';
+      }
+    }
+
+    function closeTokenModal() {
+      document.getElementById('tokenModal').classList.remove('open');
+      document.getElementById('tokenTextarea').value = '';
+    }
+
+    async function submitTokenAccount(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitToken');
+      const token = document.getElementById('tokenTextarea').value.trim();
+      if (!token || !pendingTokenProvider) return;
+      btn.disabled = true;
+      btn.textContent = 'מחבר...';
+      try {
+        const res = await fetch('/api/accounts/add-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: pendingTokenProvider, token })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        closeTokenModal();
+        toast(`החשבון ${data.name} חובר לענן! שמור את ה-RCLONE_CONFIG_BASE64 ב-Render לשמירה קבועה.`, 'success');
+        refreshAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'חבר חשבון לענן';
+      }
+    }
+
+    async function exportConfigBase64() {
+      try {
+        const res = await fetch('/api/accounts/export-base64');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        await navigator.clipboard.writeText(data.base64);
+        toast('RCLONE_CONFIG_BASE64 הועתק! הדבק אותו ב-Render לשמירה קבועה.', 'success');
+      } catch (err) {
+        toast('שגיאה בייצוא: ' + err.message, 'error');
+      }
+    }
+
+    async function startAddAccount(provider) {
+      const labels = {
+        drive: 'Google Drive',
+        onedrive: 'Microsoft OneDrive & M365',
+        dropbox: 'Dropbox',
+        box: 'Box',
+        pcloud: 'pCloud',
+        yandex: 'Yandex Disk'
+      };
+
+      if (!appStatus.isWindows) {
+        if (appStatus.webOAuth && appStatus.webOAuth[provider]) {
+          window.location.href = `/api/oauth/start/${encodeURIComponent(provider)}`;
+          return;
+        }
+        pendingTokenProvider = provider;
+        document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider]} חדש`;
+        document.getElementById('tokenCmdBox').textContent = `rclone authorize "${provider}"`;
+        document.getElementById('tokenTextarea').value = '';
+        document.getElementById('tokenModal').classList.add('open');
+        return;
+      }
+
+      const res = await fetch('/api/accounts/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider })
+      });
+      const data = await res.json();
+      if (!data.ok) return toast(data.error, 'error');
+
+      document.getElementById('authModalTitle').textContent = `מחבר חשבון ${labels[provider]} (${data.name})`;
+      document.getElementById('authStatusText').textContent = 'ממתין לאישור בחלון הדפדפן שנפתח...';
+      const urlBtn = document.getElementById('authUrlBtn');
+      urlBtn.style.display = 'none';
+      urlBtn.href = '#';
+      document.getElementById('authModal').classList.add('open');
+
+      if (authPollTimer) clearInterval(authPollTimer);
+      authPollTimer = setInterval(async () => {
+        const stRes = await fetch('/api/accounts/auth-status');
+        const st = await stRes.json();
+        if (st.authUrl && urlBtn.style.display === 'none') {
+          urlBtn.href = st.authUrl;
+          urlBtn.style.display = 'inline-flex';
+          try { window.open(st.authUrl, '_blank'); } catch (_) {}
+        }
+        if (st.status === 'done') {
+          clearInterval(authPollTimer);
+          document.getElementById('authModal').classList.remove('open');
+          toast(`החשבון ${st.name} חובר ונוסף לענן המאוחד!`, 'success');
+          refreshAll();
+        } else if (st.status === 'error') {
+          clearInterval(authPollTimer);
+          document.getElementById('authModal').classList.remove('open');
+          toast('ההתחברות נכשלה: ' + (st.error || 'שגיאה'), 'error');
+        }
+      }, 1000);
+    }
+
+    async function cancelAuth() {
+      if (authPollTimer) clearInterval(authPollTimer);
+      await fetch('/api/accounts/cancel-auth', { method: 'POST' });
+      document.getElementById('authModal').classList.remove('open');
+    }
+
+    async function removeAccount(name) {
+      if (!confirm(`לנתק את החשבון "${name}" מהענן המאוחד? (הקבצים בחשבון לא יימחקו)`)) return;
+      try {
+        const res = await fetch('/api/accounts/' + encodeURIComponent(name), { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.ok) return toast(data.error, 'error');
+        toast(`החשבון ${name} נותק מהענן.`, 'success');
+        refreshAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    async function toggleMount() {
+      const btn = document.getElementById('btnMountToggle');
+      btn.disabled = true;
+      try {
+        if (appStatus.mounted) {
+          await fetch('/api/mount/stop', { method: 'POST' });
+          toast('כונן הענן נותק מהמחשב.', 'info');
+        } else {
+          const driveLetter = document.getElementById('driveSelect').value;
+          const res = await fetch('/api/mount/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ driveLetter })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error);
+          toast(`הענן המאוחד חובר ככונן ${data.driveLetter}:\\ במחשב!`, 'success');
+        }
+        await loadStatus();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function openDriveInExplorer() {
+      await fetch('/api/mount/open', { method: 'POST' });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+    function escapeAttr(s) {
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    async function refreshAll() {
+      await loadStatus();
+      await Promise.all([loadStorage(), loadFiles()]);
+    }
+
+    // Event Listeners
+    document.getElementById('btnUpload').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('fileInput').onchange = (e) => { uploadFiles(e.target.files); e.target.value = ''; };
+    document.getElementById('btnNewFolder').onclick = createFolder;
+    document.getElementById('searchInput').oninput = renderFiles;
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePreview();
+        closeProviderModal();
+        closeCredModal();
+        closeTokenModal();
+        closePromptModal();
+        closeSidebarDrawer();
+      }
+    });
+
+    // Drag & Drop
+    let dragCounter = 0;
+    const dropOverlay = document.getElementById('dropOverlay');
+    window.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; dropOverlay.classList.add('visible'); });
+    window.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dropOverlay.classList.remove('visible'); } });
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => {
+      e.preventDefault();
+      dragCounter = 0;
+      dropOverlay.classList.remove('visible');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        uploadFiles(e.dataTransfer.files);
+      }
+    });
+
+    async function doLogin(e) {
+      e.preventDefault();
+      const pw = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          errEl.textContent = data.error || 'סיסמה שגויה';
+          errEl.style.display = 'block';
+          return;
+        }
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginModal').classList.remove('open');
+        refreshAll();
+      } catch (err) {
+        errEl.textContent = 'שגיאת התחברות: ' + err.message;
+        errEl.style.display = 'block';
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      document.getElementById('loginModal').classList.add('open');
+    }
+
+    async function initApp() {
+      const qs = new URLSearchParams(window.location.search);
+      const connected = qs.get('connected');
+      const oauthError = qs.get('oauthError');
+      if (connected || oauthError) {
+        history.replaceState({}, '', window.location.pathname);
+      }
+
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authRequired && !data.authenticated) {
+          document.getElementById('loginModal').classList.add('open');
+          document.getElementById('loginPassword').focus();
+          return;
+        }
+      } catch (_) {}
+
+      await refreshAll();
+      if (connected) {
+        toast(`החשבון ${connected} חובר בהצלחה! העתק קונפיג לשמירה ב-Render.`, 'success');
+      } else if (oauthError) {
+        toast('שגיאה בהתחברות: ' + oauthError, 'error');
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "unified-cloud",
+  "version": "1.0.0",
+  "description": "Personal Unified Cloud over Google Drive, OneDrive, and more (Web UI + Windows Drive Mount)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

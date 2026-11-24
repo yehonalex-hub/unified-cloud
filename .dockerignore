@@ -1,0 +1,6 @@
+node_modules
+.env
+*.conf
+rclone.conf
+start.bat
+export-config.ps1
