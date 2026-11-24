@@ -11,6 +11,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY server.js ./
+COPY connectors ./connectors
 COPY public ./public
 
 ENV PORT=3456
