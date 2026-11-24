@@ -1002,8 +1002,8 @@
       </div>
     </div>
 
-    <!-- Advanced: Windows Drive Mount (Collapsible & Clutter-Free) -->
-    <details class="card" id="windowsMountCard" style="cursor: pointer;">
+    <!-- Windows Drive Mount (Always visible on Local & Cloud) -->
+    <details class="card" id="windowsMountCard" open style="cursor: pointer;">
       <summary class="card-header" style="list-style: none; user-select: none; display: flex; align-items: center; justify-content: space-between;">
         <span>⚙️ כונן מקומי ב-Windows</span>
         <span class="status-pill pill-off" id="mountPill">מנותק</span>
@@ -1544,9 +1544,9 @@
 
         document.getElementById('accountsCount').textContent = data.remotes.length;
         document.getElementById('btnLogout').style.display = data.authRequired ? 'inline-flex' : 'none';
-        document.getElementById('windowsMountCard').style.display = data.isWindows ? 'flex' : 'none';
+        document.getElementById('windowsMountCard').style.display = 'flex';
         document.getElementById('btnExportConfig').style.display = data.isWindows ? 'none' : 'inline-flex';
-        document.getElementById('winfspWarning').style.display = data.winfspInstalled ? 'none' : 'block';
+        document.getElementById('winfspWarning').style.display = (data.isWindows && !data.winfspInstalled) ? 'block' : 'none';
 
         const pill = document.getElementById('mountPill');
         const btnMount = document.getElementById('btnMountToggle');
@@ -2619,6 +2619,12 @@
 
     async function toggleMount() {
       const btn = document.getElementById('btnMountToggle');
+      const driveLetter = document.getElementById('driveSelect').value;
+      if (!appStatus.isWindows) {
+        window.location.href = `/api/mount/download-script?drive=${encodeURIComponent(driveLetter)}`;
+        toast(`מוריד קובץ חיבור לכונן ${driveLetter}:\\ — לחץ עליו פעם אחת כדי לחבר למחשב!`, 'success');
+        return;
+      }
       btn.disabled = true;
       try {
         if (appStatus.mounted) {

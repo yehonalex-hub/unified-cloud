@@ -894,6 +894,50 @@ app.post('/api/mount/open', (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/mount/download-script', async (req, res) => {
+  try {
+    const drive = String(req.query.drive || 'Z').replace(/[^A-Za-z]/g, '').toUpperCase() || 'Z';
+    let confFile = getRcloneConfigPath();
+    if (!confFile) {
+      const { stdout } = await runRclone(['config', 'file'], 10000);
+      const lines = stdout.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      confFile = lines[lines.length - 1];
+    }
+    const b64 = (confFile && fs.existsSync(confFile))
+      ? fs.readFileSync(confFile).toString('base64')
+      : '';
+
+    const bat = [
+      '@echo off',
+      'chcp 65001 >nul',
+      `title Unified Cloud - Drive ${drive}:\\`,
+      'echo ===================================================',
+      `echo   Connecting Unified Cloud as Drive ${drive}:\\ ...`,
+      'echo ===================================================',
+      'where rclone >nul 2>&1 || (',
+      '  echo Installing rclone...',
+      '  winget install --id Rclone.Rclone -e --source winget --silent',
+      ')',
+      'if not exist "C:\\Program Files (x86)\\WinFsp" if not exist "C:\\Program Files\\WinFsp" (',
+      '  echo Installing WinFsp...',
+      '  winget install --id WinFsp.WinFsp -e --source winget --silent',
+      ')',
+      `set "CONF=%TEMP%\\unified-cloud-mount.conf"`,
+      `powershell -NoProfile -Command "[IO.File]::WriteAllBytes('%TEMP%\\unified-cloud-mount.conf', [Convert]::FromBase64String('${b64}'))"`,
+      `echo Mounting ${drive}:\\ ... Keep this window open while using the drive.`,
+      `start "" explorer.exe ${drive}:\\`,
+      `rclone mount ${UNION_NAME}: ${drive}: --config "%CONF%" --vfs-cache-mode full --volname "Unified Cloud" --network-mode`,
+      'pause'
+    ].join('\r\n');
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="UnifiedCloud-Mount-${drive}.bat"`);
+    res.send(bat);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.use('/api', (req, res) => {
   res.status(404).json({ ok: false, error: 'נתיב API לא נמצא — ודא ש-server.js מעודכן בשרת.' });
 });
