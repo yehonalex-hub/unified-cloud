@@ -1605,6 +1605,10 @@
       }
     }
 
+    function onRemoteFilterChange() {
+      loadFiles('');
+    }
+
     async function loadFiles(pathStr = currentPath) {
       currentPath = pathStr;
       renderBreadcrumbs();
@@ -1612,7 +1616,11 @@
       area.innerHTML = '<div class="empty-state"><div class="spinner" style="width:36px;height:36px;"></div><p>טוען קבצים מהענן המאוחד...</p></div>';
 
       try {
-        const res = await fetch('/api/files?path=' + encodeURIComponent(currentPath));
+        const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
+        const qs = new URLSearchParams({ path: currentPath });
+        if (activeRemote) qs.set('remote', activeRemote);
+
+        const res = await fetch('/api/files?' + qs.toString());
         const data = await res.json();
         if (!data.ok) throw new Error(data.error);
 
@@ -1641,8 +1649,16 @@
 
     function renderBreadcrumbs() {
       const bc = document.getElementById('breadcrumbs');
+      const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
       const parts = currentPath ? currentPath.split('/') : [];
-      let html = `<span class="crumb ${parts.length === 0 ? 'active' : ''}" onclick="loadFiles('')">🏠 הענן שלי</span>`;
+      let rootLabel = '🏠 הענן שלי';
+      if (activeRemote) {
+        const found = appStatus.remotes?.find(r => r.name === activeRemote);
+        if (found?.isSharedDrive) rootLabel = `📁 ${found.displayName || found.name}`;
+        else if (found?.isGoogle) rootLabel = `🔵 ${found.email || found.name}`;
+        else rootLabel = `☁️ ${activeRemote}`;
+      }
+      let html = `<span class="crumb ${parts.length === 0 ? 'active' : ''}" onclick="loadFiles('')">${escapeHtml(rootLabel)}</span>`;
       let accum = '';
       parts.forEach((p, idx) => {
         accum = accum ? `${accum}/${p}` : p;
@@ -1738,9 +1754,11 @@
       previewImageRotation = 0;
 
       const ext = (name.split('.').pop() || '').toLowerCase();
+      const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
+      const remoteParam = activeRemote ? `&remote=${encodeURIComponent(activeRemote)}` : '';
       const itemSize = item && item.size ? `&size=${item.size}` : '';
-      const inlineUrl = `/api/download?path=${encodeURIComponent(itemPath)}&inline=1${itemSize}`;
-      const downloadUrl = `/api/download?path=${encodeURIComponent(itemPath)}${itemSize}`;
+      const inlineUrl = `/api/download?path=${encodeURIComponent(itemPath)}&inline=1${itemSize}${remoteParam}`;
+      const downloadUrl = `/api/download?path=${encodeURIComponent(itemPath)}${itemSize}${remoteParam}`;
 
       const modal = document.getElementById('previewModal');
       const body = document.getElementById('previewBody');
@@ -1901,8 +1919,10 @@
     }
 
     function downloadItem(itemPath, size) {
+      const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
+      const remoteParam = activeRemote ? `&remote=${encodeURIComponent(activeRemote)}` : '';
       const sizeParam = size ? `&size=${size}` : '';
-      window.location.href = `/api/download?path=${encodeURIComponent(itemPath)}${sizeParam}`;
+      window.location.href = `/api/download?path=${encodeURIComponent(itemPath)}${sizeParam}${remoteParam}`;
     }
 
     // Modern Upload Experience with Progress
@@ -1956,7 +1976,9 @@
         toast('שגיאת רשת במהלך ההעלאה', 'error');
       };
 
-      xhr.open('POST', '/api/upload?path=' + encodeURIComponent(currentPath));
+      const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
+      const remoteParam = activeRemote ? `&remote=${encodeURIComponent(activeRemote)}` : '';
+      xhr.open('POST', '/api/upload?path=' + encodeURIComponent(currentPath) + remoteParam);
       xhr.send(formData);
     }
 
@@ -1973,10 +1995,11 @@
         input.value = '';
         input.placeholder = 'שם תיקייה...';
         promptCallback = async (val) => {
+          const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
           const res = await fetch('/api/mkdir', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: currentPath, name: val.trim() })
+            body: JSON.stringify({ path: currentPath, name: val.trim(), remote: activeRemote || null })
           });
           const data = await res.json();
           if (!data.ok) return toast(data.error, 'error');
@@ -1990,10 +2013,11 @@
         input.placeholder = 'שם חדש...';
         promptCallback = async (val) => {
           if (val.trim() === defaultValue) return;
+          const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
           const res = await fetch('/api/rename', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oldPath: targetPath, newName: val.trim() })
+            body: JSON.stringify({ oldPath: targetPath, newName: val.trim(), remote: activeRemote || null })
           });
           const data = await res.json();
           if (!data.ok) return toast(data.error, 'error');
@@ -2031,7 +2055,9 @@
     async function deleteItem(itemPath, isDir, name) {
       if (!confirm(`למחוק את "${name}" מהענן המאוחד?`)) return;
       try {
-        const res = await fetch(`/api/files?path=${encodeURIComponent(itemPath)}&isDir=${isDir}`, {
+        const activeRemote = document.getElementById('activeRemoteSelect')?.value || '';
+        const remoteParam = activeRemote ? `&remote=${encodeURIComponent(activeRemote)}` : '';
+        const res = await fetch(`/api/files?path=${encodeURIComponent(itemPath)}&isDir=${isDir}${remoteParam}`, {
           method: 'DELETE'
         });
         const data = await res.json();
@@ -2046,6 +2072,7 @@
     // Provider Modals
     let pendingTokenProvider = null;
     let pendingCredProvider = null;
+    let pendingCustomName = null;
 
     function openProviderModal() {
       document.getElementById('providerModal').classList.add('open');
@@ -2068,6 +2095,14 @@
 
     function pickProvider(provider) {
       closeProviderModal();
+      if (provider === 'drive') {
+        openGoogleAccountModal();
+        return;
+      }
+      if (provider === 'shared_drive') {
+        openSharedDrivesModal();
+        return;
+      }
       const directProviders = ['mega', 'koofr', 's3', 'webdav', 'pcloud', 'yandex'];
       if (directProviders.includes(provider)) {
         pendingCredProvider = provider;
@@ -2181,6 +2216,7 @@
     function closeTokenModal() {
       document.getElementById('tokenModal').classList.remove('open');
       document.getElementById('tokenTextarea').value = '';
+      pendingCustomName = null;
     }
 
     async function submitTokenAccount(e) {
@@ -2194,7 +2230,11 @@
         const res = await fetch('/api/accounts/add-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider: pendingTokenProvider, token })
+          body: JSON.stringify({
+            provider: pendingTokenProvider,
+            token,
+            customName: pendingCustomName || undefined
+          })
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error);
@@ -2221,7 +2261,169 @@
       }
     }
 
-    async function startAddAccount(provider) {
+    // Google Multi-Account & Shared Drives Modal Handlers
+    function openGoogleAccountModal() {
+      document.getElementById('googleAccountModal').classList.add('open');
+      const input = document.getElementById('customGoogleNameInput');
+      if (input) input.value = '';
+    }
+
+    function closeGoogleAccountModal() {
+      document.getElementById('googleAccountModal').classList.remove('open');
+    }
+
+    function submitGooglePreset(preset) {
+      closeGoogleAccountModal();
+      startAddAccount('drive', preset);
+    }
+
+    function submitCustomGoogleAccount() {
+      const input = document.getElementById('customGoogleNameInput');
+      const val = (input ? input.value : '').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      closeGoogleAccountModal();
+      startAddAccount('drive', val || null);
+    }
+
+    function openSharedDrivesModal(preselectedRemote = '') {
+      const select = document.getElementById('sharedDriveBaseSelect');
+      const resultBox = document.getElementById('sharedDrivesScanResult');
+      resultBox.innerHTML = '';
+      document.getElementById('manualSharedDriveId').value = '';
+      document.getElementById('manualSharedDriveName').value = '';
+
+      const googleRemotes = (appStatus.remotes || []).filter(r => r.isGoogle && !r.isSharedDrive);
+      if (googleRemotes.length === 0) {
+        select.innerHTML = '<option value="">(לא נמצא חשבון Google מחובר)</option>';
+        resultBox.innerHTML = `
+          <div class="warn-box" style="margin-top:4px;">
+            ⚠️ לא נמצא חשבון Google Drive מחובר בענן.<br/>
+            יש לחבר קודם חשבון Google Drive (אישי או ארגוני) כדי לסרוק או לחבר כוננים משותפים.
+          </div>
+        `;
+      } else {
+        select.innerHTML = googleRemotes.map(r => `
+          <option value="${escapeAttr(r.name)}" ${r.name === preselectedRemote ? 'selected' : ''}>
+            ${escapeHtml(r.name)} ${r.email ? `(${escapeHtml(r.email)})` : ''}
+          </option>
+        `).join('');
+      }
+
+      document.getElementById('sharedDrivesModal').classList.add('open');
+    }
+
+    function closeSharedDrivesModal() {
+      document.getElementById('sharedDrivesModal').classList.remove('open');
+    }
+
+    function openSharedDrivesForRemote(remoteName) {
+      openSharedDrivesModal(remoteName);
+      setTimeout(() => {
+        scanSharedDrives();
+      }, 50);
+    }
+
+    async function scanSharedDrives() {
+      const baseRemote = document.getElementById('sharedDriveBaseSelect')?.value;
+      const resultBox = document.getElementById('sharedDrivesScanResult');
+      const btn = document.getElementById('btnScanSharedDrives');
+      if (!baseRemote) {
+        return toast('אנא בחר חשבון Google Drive מחובר', 'error');
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'סורק...';
+      resultBox.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; padding:10px; color:var(--muted); font-size:12.5px;">
+          <span class="spinner"></span> סורק כוננים משותפים בחשבון ${escapeHtml(baseRemote)}...
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`/api/google/shared-drives?remote=${encodeURIComponent(baseRemote)}`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+
+        const drives = data.drives || [];
+        if (drives.length === 0) {
+          resultBox.innerHTML = `
+            <div style="font-size:12.5px; color:var(--muted); padding:10px 0; text-align:center;">
+              לא נמצאו כוננים משותפים (Shared Drives) מקושרים לחשבון זה.<br/>
+              אם יש לך קישור ישיר לכונן משותף, תוכל להדביק אותו בשדה למטה.
+            </div>
+          `;
+          return;
+        }
+
+        resultBox.innerHTML = `
+          <div style="font-size:12px; font-weight:700; color:var(--text); margin-bottom:6px;">נמצאו ${drives.length} כוננים משותפים:</div>
+          <div style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; padding-right:2px;">
+            ${drives.map(d => `
+              <div style="display:flex; align-items:center; justify-content:space-between; background:#0b1120; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+                <div style="display:flex; flex-direction:column; min-width:0;">
+                  <div style="font-size:13px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📁 ${escapeHtml(d.name)}</div>
+                  <div style="font-size:10.5px; color:var(--muted); font-family:monospace;">ID: ${escapeHtml(d.id)}</div>
+                </div>
+                <div>
+                  ${d.alreadyConnected ? `
+                    <span class="status-pill pill-on" style="font-size:10px;">מחובר לענן</span>
+                  ` : `
+                    <button class="btn-primary btn-sm" style="padding:4px 9px; font-size:11px;" onclick="connectScannedDrive('${escapeAttr(baseRemote)}', '${escapeAttr(d.id)}', '${escapeAttr(d.name)}')">➕ חבר לענן</button>
+                  `}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        resultBox.innerHTML = `<div class="warn-box">שגיאה בסריקת כוננים: ${escapeHtml(err.message)}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 סרוק כוננים';
+      }
+    }
+
+    async function connectScannedDrive(baseRemote, sharedDriveId, driveName) {
+      try {
+        const res = await fetch('/api/google/add-shared-drive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseRemote, sharedDriveId, customName: driveName })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        toast(`הכונן המשותף "${driveName}" חובר בהצלחה לענן המאוחד!`, 'success');
+        closeSharedDrivesModal();
+        refreshAll();
+      } catch (err) {
+        toast('שגיאה בחיבור כונן: ' + err.message, 'error');
+      }
+    }
+
+    async function addManualSharedDrive() {
+      const baseRemote = document.getElementById('sharedDriveBaseSelect')?.value;
+      const rawId = document.getElementById('manualSharedDriveId')?.value.trim();
+      const customName = document.getElementById('manualSharedDriveName')?.value.trim();
+
+      if (!baseRemote) return toast('אנא בחר חשבון Google מקושר', 'error');
+      if (!rawId) return toast('אנא הזן מזהה כונן או קישור', 'error');
+
+      try {
+        const res = await fetch('/api/google/add-shared-drive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseRemote, sharedDriveId: rawId, customName: customName || undefined })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        toast(`הכונן המשותף חובר בהצלחה לענן המאוחד!`, 'success');
+        closeSharedDrivesModal();
+        refreshAll();
+      } catch (err) {
+        toast('שגיאה בחיבור כונן: ' + err.message, 'error');
+      }
+    }
+
+    async function startAddAccount(provider, customName = null) {
       const labels = {
         drive: 'Google Drive',
         onedrive: 'Microsoft OneDrive & M365',
@@ -2233,11 +2435,13 @@
 
       if (!appStatus.isWindows) {
         if (appStatus.webOAuth && appStatus.webOAuth[provider]) {
-          window.location.href = `/api/oauth/start/${encodeURIComponent(provider)}`;
+          const qs = customName ? `?customName=${encodeURIComponent(customName)}` : '';
+          window.location.href = `/api/oauth/start/${encodeURIComponent(provider)}${qs}`;
           return;
         }
         pendingTokenProvider = provider;
-        document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider]} חדש`;
+        pendingCustomName = customName;
+        document.getElementById('tokenModalTitle').textContent = `חבר ${labels[provider] || provider} חדש`;
         document.getElementById('tokenCmdBox').textContent = `rclone authorize "${provider}"`;
         document.getElementById('tokenTextarea').value = '';
         document.getElementById('tokenModal').classList.add('open');
@@ -2247,12 +2451,12 @@
       const res = await fetch('/api/accounts/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider })
+        body: JSON.stringify({ provider, customName: customName || undefined })
       });
       const data = await res.json();
       if (!data.ok) return toast(data.error, 'error');
 
-      document.getElementById('authModalTitle').textContent = `מחבר חשבון ${labels[provider]} (${data.name})`;
+      document.getElementById('authModalTitle').textContent = `מחבר חשבון ${labels[provider] || provider} (${data.name})`;
       document.getElementById('authStatusText').textContent = 'ממתין לאישור בחלון הדפדפן שנפתח...';
       const urlBtn = document.getElementById('authUrlBtn');
       urlBtn.style.display = 'none';
@@ -2357,6 +2561,8 @@
         closeTokenModal();
         closePromptModal();
         closeSidebarDrawer();
+        closeGoogleAccountModal();
+        closeSharedDrivesModal();
       }
     });
 

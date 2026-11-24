@@ -122,10 +122,12 @@ async function getGoogleAccountInfo(remoteName, remoteConfig) {
   return result;
 }
 
-function parseGoogleRemoteMeta(remoteName, remoteType, config) {
-  const rConf = (config && config[remoteName]) || {};
-  const isDirectDrive = remoteType === 'drive' || rConf.type === 'drive';
-  const isAlias = remoteType === 'alias' || rConf.type === 'alias';
+function parseGoogleRemoteMeta(remoteName, remoteType, config = {}) {
+  // Support both full config object { remoteName: { ... } } or single remote config { type: ... }
+  const rConf = (config && config[remoteName]) ? config[remoteName] : (config || {});
+  const type = remoteType || rConf.type || '';
+  const isDirectDrive = type === 'drive';
+  const isAlias = type === 'alias';
   
   let isSharedDrive = false;
   let sharedDriveId = null;
@@ -134,6 +136,7 @@ function parseGoogleRemoteMeta(remoteName, remoteType, config) {
   if (isDirectDrive && rConf.team_drive) {
     isSharedDrive = true;
     sharedDriveId = rConf.team_drive;
+    baseRemote = remoteName;
   } else if (isAlias && rConf.remote && rConf.remote.includes('team_drive=')) {
     isSharedDrive = true;
     const m = rConf.remote.match(/team_drive=([^,:]+)/);
@@ -141,10 +144,10 @@ function parseGoogleRemoteMeta(remoteName, remoteType, config) {
     baseRemote = rConf.remote.split(',')[0].replace(/:$/, '').trim();
   }
 
-  const isGoogle = isDirectDrive || (isAlias && baseRemote && (config[baseRemote]?.type === 'drive'));
+  const isGoogle = isDirectDrive || isSharedDrive || Boolean(isAlias && baseRemote && config[baseRemote]?.type === 'drive');
 
   return {
-    isGoogle,
+    isGoogle: Boolean(isGoogle),
     isSharedDrive,
     sharedDriveId,
     baseRemote
