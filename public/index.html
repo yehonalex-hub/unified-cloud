@@ -1444,9 +1444,12 @@
       return '📎';
     }
 
-    function providerLabel(type, name = '') {
+    function providerLabel(type, name = '', acc = {}) {
       const n = (name || '').toLowerCase();
-      if (type === 'drive' || n.startsWith('drive') || n.startsWith('google')) return { text: 'Google', cls: 'badge-drive' };
+      if (acc.isSharedDrive || n.startsWith('shared_') || n.includes('shared_drive') || n.includes('team_drive')) {
+        return { text: 'Shared Drive', cls: 'badge-shared' };
+      }
+      if (type === 'drive' || acc.isGoogle || n.startsWith('drive') || n.startsWith('google')) return { text: 'Google Drive', cls: 'badge-drive' };
       if (type === 'onedrive' || n.startsWith('onedrive')) return { text: 'OneDrive / M365', cls: 'badge-onedrive' };
       if (type === 'dropbox' || n.startsWith('dropbox')) return { text: 'Dropbox', cls: 'badge-dropbox' };
       if (type === 'mega' || n.startsWith('mega')) return { text: 'MEGA', cls: 'badge-mega' };
@@ -1520,6 +1523,23 @@
           btnOpen.style.display = 'none';
           driveSel.disabled = false;
         }
+
+        const activeSel = document.getElementById('activeRemoteSelect');
+        if (activeSel) {
+          const currentVal = activeSel.value;
+          let optHtml = '<option value="">🌐 כל הענן המאוחד (הכל)</option>';
+          data.remotes.forEach(r => {
+            let label = r.name;
+            if (r.isSharedDrive) label = `📁 ${r.displayName || r.name} (כונן משותף)`;
+            else if (r.isGoogle) label = `🔵 ${r.email ? `${r.name} (${r.email})` : r.name}`;
+            else label = `☁️ ${r.name}`;
+            optHtml += `<option value="${escapeAttr(r.name)}">${escapeHtml(label)}</option>`;
+          });
+          activeSel.innerHTML = optHtml;
+          if (data.remotes.some(r => r.name === currentVal)) {
+            activeSel.value = currentVal;
+          }
+        }
       } catch (err) {
         console.error('Error loading status:', err);
       }
@@ -1544,21 +1564,32 @@
         }
 
         listEl.innerHTML = data.accounts.map(acc => {
-          const p = providerLabel(acc.type, acc.name);
+          const p = providerLabel(acc.type, acc.name, acc);
+          const isShared = Boolean(acc.isSharedDrive);
+          const isGoogleDrive = Boolean(acc.isGoogle && !acc.isSharedDrive);
           const isUnlimited = Boolean(acc.unlimited);
           const apct = isUnlimited ? 100 : (acc.total > 0 ? Math.min(100, (acc.used / acc.total) * 100) : 0);
-          const leftText = acc.error ? 'שגיאת קריאה' : (isUnlimited ? 'אחסון אובייקטים (ללא הגבלה)' : `${formatBytes(acc.used)} / ${formatBytes(acc.total)}`);
-          const rightText = acc.error ? '' : (isUnlimited ? 'פעיל ומחובר' : `${formatBytes(acc.free)} פנוי`);
-          const barStyle = isUnlimited ? 'background: linear-gradient(90deg, #f97316, #fb923c); width: 100%;' : `width:${apct.toFixed(1)}%`;
+          
+          let leftText = acc.error ? 'שגיאת קריאה' : (isUnlimited ? (isShared ? 'כונן משותף (שטח ארגוני)' : 'אחסון ללא הגבלה') : `${formatBytes(acc.used)} / ${formatBytes(acc.total)}`);
+          let rightText = acc.error ? '' : (isUnlimited ? 'פעיל ומחובר' : `${formatBytes(acc.free)} פנוי`);
+          let barStyle = isUnlimited ? (isShared ? 'background: linear-gradient(90deg, #9333ea, #c084fc); width: 100%;' : 'background: linear-gradient(90deg, #f97316, #fb923c); width: 100%;') : `width:${apct.toFixed(1)}%`;
+          
+          let emailLine = acc.email ? `<div style="font-size:11px; color:var(--muted); direction:ltr; text-align:right;">${escapeHtml(acc.email)}</div>` : '';
+          let sharedBtn = isGoogleDrive ? `<button class="btn-secondary btn-sm" style="padding:2px 6px; font-size:10.5px; border-color:var(--sky); color:var(--sky);" onclick="openSharedDrivesForRemote('${escapeHtml(acc.name)}')" title="סרוק כוננים משותפים בחשבון זה">📁 Shared Drives</button>` : '';
+
           return `
             <div class="account-item">
               <div class="account-top">
-                <div class="account-name">
+                <div class="account-name" title="${escapeAttr(acc.name)}">
                   <span class="provider-badge ${p.cls}">${p.text}</span>
-                  <span>${escapeHtml(acc.name)}</span>
+                  <span style="font-weight:700;">${escapeHtml(acc.displayName || acc.name)}</span>
                 </div>
-                <button class="btn-danger btn-sm" style="padding:2px 7px; font-size:11px;" onclick="removeAccount('${escapeHtml(acc.name)}')" title="נתק חשבון">✕</button>
+                <div style="display:flex; align-items:center; gap:4px;">
+                  ${sharedBtn}
+                  <button class="btn-danger btn-sm" style="padding:2px 7px; font-size:11px;" onclick="removeAccount('${escapeHtml(acc.name)}')" title="נתק חשבון">✕</button>
+                </div>
               </div>
+              ${emailLine}
               <div class="progress-bar" style="height:5px;">
                 <div class="progress-fill" style="${barStyle}"></div>
               </div>
