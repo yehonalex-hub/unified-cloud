@@ -894,6 +894,10 @@ app.post('/api/mount/open', (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, uptime: process.uptime(), platform: process.platform });
+});
+
 app.get('/api/mount/download-script', async (req, res) => {
   try {
     const drive = String(req.query.drive || 'Z').replace(/[^A-Za-z]/g, '').toUpperCase() || 'Z';
@@ -911,23 +915,14 @@ app.get('/api/mount/download-script', async (req, res) => {
       '@echo off',
       'chcp 65001 >nul',
       `title Unified Cloud - Drive ${drive}:\\`,
-      'echo ===================================================',
-      `echo   Connecting Unified Cloud as Drive ${drive}:\\ ...`,
-      'echo ===================================================',
-      'where rclone >nul 2>&1 || (',
-      '  echo Installing rclone...',
-      '  winget install --id Rclone.Rclone -e --source winget --silent',
-      ')',
-      'if not exist "C:\\Program Files (x86)\\WinFsp" if not exist "C:\\Program Files\\WinFsp" (',
-      '  echo Installing WinFsp...',
-      '  winget install --id WinFsp.WinFsp -e --source winget --silent',
-      ')',
+      'where rclone >nul 2>&1 || winget install --id Rclone.Rclone -e --source winget --silent',
+      'if not exist "C:\\Program Files (x86)\\WinFsp" if not exist "C:\\Program Files\\WinFsp" winget install --id WinFsp.WinFsp -e --source winget --silent',
       `set "CONF=%TEMP%\\unified-cloud-mount.conf"`,
-      `powershell -NoProfile -Command "[IO.File]::WriteAllBytes('%TEMP%\\unified-cloud-mount.conf', [Convert]::FromBase64String('${b64}'))"`,
-      `echo Mounting ${drive}:\\ ... Keep this window open while using the drive.`,
+      `powershell -NoProfile -WindowStyle Hidden -Command "[IO.File]::WriteAllBytes('%TEMP%\\unified-cloud-mount.conf', [Convert]::FromBase64String('${b64}'))"`,
+      `powershell -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath 'rclone' -ArgumentList 'mount','${UNION_NAME}:','${drive}:','--config','%TEMP%\\unified-cloud-mount.conf','--vfs-cache-mode','full','--volname','Unified Cloud','--network-mode' -WindowStyle Hidden"`,
+      'timeout /t 2 /nobreak >nul',
       `start "" explorer.exe ${drive}:\\`,
-      `rclone mount ${UNION_NAME}: ${drive}: --config "%CONF%" --vfs-cache-mode full --volname "Unified Cloud" --network-mode`,
-      'pause'
+      'exit'
     ].join('\r\n');
 
     res.setHeader('Content-Type', 'application/octet-stream');
