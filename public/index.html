@@ -996,8 +996,8 @@
       </div>
       <div id="accountsList" style="display:flex; flex-direction:column; gap:8px;"></div>
       <div class="add-providers" id="addProvidersBox">
-        <button class="btn-primary btn-sm" style="background: linear-gradient(135deg, #2563eb, #38bdf8);" onclick="pickProvider('drive')">🔵 חבר חשבון Google Drive</button>
-        <button class="btn-secondary btn-sm" onclick="openProviderModal()">➕ שירותי ענן נוספים (8 ספקים)</button>
+        <button class="btn-primary btn-sm" style="background: linear-gradient(135deg, #2563eb, #38bdf8); font-weight: 700;" onclick="openProviderModal()">➕ הוסף כונן ענן</button>
+        <button class="btn-secondary btn-sm" onclick="startAddAccount('drive')">🔵 חבר Google Drive בלחיצה</button>
         <button class="btn-secondary btn-sm" id="btnExportConfig" style="display:none; border-color:var(--sky); color:var(--sky);" onclick="exportConfigBase64()">💾 העתק קונפיג לשמירה ב-Render</button>
       </div>
     </div>
@@ -1677,9 +1677,10 @@
               <div class="big-icon">☁️✨</div>
               <h2>ברוך הבא לענן המאוחד שלך!</h2>
               <p>כל שירותי הענן והקבצים שלך מתנקזים לאתר אחד פשוט, מהיר ונקי — בלי סיבוכים ובלי דברים מיותרים.</p>
-              <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:14px;">
-                <button class="btn-primary" style="background: linear-gradient(135deg, #1d4ed8, #0284c7); font-size:14px; padding:12px 20px;" onclick="pickProvider('drive')">🔵 חבר חשבון Google Drive בלחיצה</button>
-                <button class="btn-secondary" style="font-size:14px; padding:12px 20px;" onclick="openProviderModal()">➕ שירותי ענן נוספים</button>
+              <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:16px;">
+                <button class="btn-primary" style="background: linear-gradient(135deg, #1d4ed8, #0284c7); font-size:15px; padding:13px 22px;" onclick="startAddAccount('drive')">🔵 חבר Google Drive (15GB)</button>
+                <button class="btn-primary" style="background: linear-gradient(135deg, #dc2626, #ef4444); font-size:15px; padding:13px 22px;" onclick="pickProvider('mega')">🔴 חבר MEGA (20GB)</button>
+                <button class="btn-secondary" style="font-size:15px; padding:13px 22px;" onclick="openProviderModal()">➕ הוסף כונן ענן נוסף</button>
               </div>
             </div>
           `;
@@ -2142,7 +2143,7 @@
     function pickProvider(provider) {
       closeProviderModal();
       if (provider === 'drive') {
-        openGoogleAccountModal();
+        startAddAccount('drive');
         return;
       }
       if (provider === 'shared_drive') {
