@@ -46,9 +46,18 @@ const {
 const {
   UNION_NAME,
   isWinFspInstalled,
-  rebuildUnion,
+  rebuildUnion: _rebuildUnion,
   getPooledStorage
 } = require('./connectors/union-manager');
+
+async function rebuildUnion() {
+  const res = await _rebuildUnion();
+  if (typeof webdavProcess !== 'undefined' && webdavProcess) {
+    try { webdavProcess.kill(); } catch (_) {}
+    webdavProcess = null;
+  }
+  return res;
+}
 
 const {
   listFiles,
