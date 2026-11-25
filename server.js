@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
+const http = require('http');
 const { spawn } = require('child_process');
 
 // Modular Connectors & Services
@@ -933,6 +934,86 @@ app.get('/api/mount/download-script', async (req, res) => {
   }
 });
 
+// ==================== NATIVE WEBDAV SERVER (MOUNT WITHOUT DOWNLOADING ANY FILE) ====================
+const WEBDAV_PORT = 18081;
+let webdavProcess = null;
+let webdavStarting = null;
+
+function ensureWebdavServer() {
+  if (webdavProcess && !webdavProcess.killed) return Promise.resolve();
+  if (webdavStarting) return webdavStarting;
+
+  webdavStarting = new Promise(async (resolve, reject) => {
+    try {
+      await rebuildUnion().catch(() => {});
+      const args = [
+        'serve', 'webdav', `${UNION_NAME}:`,
+        '--addr', `127.0.0.1:${WEBDAV_PORT}`,
+        '--baseurl', '/webdav',
+        '--vfs-cache-mode', 'writes',
+        '--dir-cache-time', '1m'
+      ];
+      const proc = spawn('rclone', args, {
+        windowsHide: true,
+        env: getRcloneEnv()
+      });
+      webdavProcess = proc;
+      proc.on('close', () => {
+        if (webdavProcess === proc) webdavProcess = null;
+      });
+      // Wait briefly for rclone serve webdav to bind
+      await new Promise(r => setTimeout(r, 900));
+      webdavStarting = null;
+      resolve();
+    } catch (err) {
+      webdavStarting = null;
+      reject(err);
+    }
+  });
+  return webdavStarting;
+}
+
+function checkWebdavAuth(req, res) {
+  if (!CLOUD_PASSWORD) return true;
+  const auth = req.headers.authorization || '';
+  if (auth.startsWith('Basic ')) {
+    const decoded = Buffer.from(auth.slice(6), 'base64').toString('utf8');
+    const idx = decoded.indexOf(':');
+    const pass = idx >= 0 ? decoded.slice(idx + 1) : decoded;
+    if (safeEqual(pass, CLOUD_PASSWORD)) return true;
+  }
+  res.setHeader('WWW-Authenticate', 'Basic realm="Unified Cloud Drive"');
+  res.status(401).send('Authentication required');
+  return false;
+}
+
+app.all('/webdav*', async (req, res) => {
+  if (!checkWebdavAuth(req, res)) return;
+  try {
+    await ensureWebdavServer();
+    const proxyHeaders = { ...req.headers, host: `127.0.0.1:${WEBDAV_PORT}` };
+    delete proxyHeaders.authorization;
+
+    const proxyReq = http.request({
+      hostname: '127.0.0.1',
+      port: WEBDAV_PORT,
+      path: req.originalUrl,
+      method: req.method,
+      headers: proxyHeaders
+    }, proxyRes => {
+      res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    });
+
+    proxyReq.on('error', err => {
+      if (!res.headersSent) res.status(502).send(`WebDAV proxy error: ${err.message}`);
+    });
+    req.pipe(proxyReq, { end: true });
+  } catch (err) {
+    if (!res.headersSent) res.status(500).send(`WebDAV error: ${err.message}`);
+  }
+});
+
 app.use('/api', (req, res) => {
   res.status(404).json({ ok: false, error: 'נתיב API לא נמצא — ודא ש-server.js מעודכן בשרת.' });
 });
@@ -940,6 +1021,9 @@ app.use('/api', (req, res) => {
 function cleanup() {
   if (mountProcess) {
     try { mountProcess.kill(); } catch (_) {}
+  }
+  if (webdavProcess) {
+    try { webdavProcess.kill(); } catch (_) {}
   }
   if (authJob && authJob.process) {
     try { authJob.process.kill(); } catch (_) {}

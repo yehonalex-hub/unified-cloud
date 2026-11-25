@@ -2621,8 +2621,7 @@
       const btn = document.getElementById('btnMountToggle');
       const driveLetter = document.getElementById('driveSelect').value;
       if (!appStatus.isWindows) {
-        window.location.href = `/api/mount/download-script?drive=${encodeURIComponent(driveLetter)}`;
-        toast(`מוריד קובץ חיבור לכונן ${driveLetter}:\\ — לחץ עליו פעם אחת כדי לחבר למחשב!`, 'success');
+        openWebdavMountModal(driveLetter);
         return;
       }
       btn.disabled = true;
@@ -2647,6 +2646,52 @@
       } finally {
         btn.disabled = false;
       }
+    }
+
+    function openWebdavMountModal(driveLetter) {
+      const webdavUrl = `${window.location.origin}/webdav`;
+      const netUseCmd = `net use ${driveLetter}: ${webdavUrl} /persistent:yes`;
+      let existing = document.getElementById('webdavMountModal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'webdavMountModal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,0.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+      modal.innerHTML = `
+        <div style="background:#0f172a;border:1px solid rgba(56,189,248,0.35);border-radius:16px;max-width:520px;width:100%;padding:22px;color:#f8fafc;direction:rtl;box-shadow:0 24px 60px rgba(0,0,0,0.55);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="margin:0;font-size:18px;">💻 חיבור כונן ${driveLetter}:\\ ישירות ב-Windows (ללא הורדת קובץ)</h3>
+            <button class="btn-secondary btn-sm" onclick="document.getElementById('webdavMountModal').remove()">✕</button>
+          </div>
+          <p style="margin:0 0 12px;font-size:13.5px;color:#94a3b8;line-height:1.55;">
+            אין צורך להוריד קובץ או להתקין כלום — Windows תומך בחיבור ישיר לכונן רשת (WebDAV):
+          </p>
+          <div style="background:#020617;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:12px;">
+            <div style="font-size:12px;color:#38bdf8;margin-bottom:6px;font-weight:600;">כתובת הכונן שלך (לחץ להעתקה):</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <code style="flex:1;direction:ltr;text-align:left;font-size:13px;color:#e2e8f0;word-break:break-all;">${webdavUrl}</code>
+              <button class="btn-primary btn-sm" onclick="navigator.clipboard.writeText('${webdavUrl}'); toast('כתובת הכונן הועתקה!', 'success')">📋 העתק</button>
+            </div>
+          </div>
+          <ol style="margin:0 0 14px;padding-right:20px;font-size:13.5px;line-height:1.7;color:#cbd5e1;">
+            <li>פתח <b>מחשב זה (This PC)</b> ב-Windows.</li>
+            <li>לחץ למעלה על <b>מפה כונן רשת (Map network drive)</b> ובחר אות <b>${driveLetter}:</b>.</li>
+            <li>הדבק את הכתובת למעלה ולחץ <b>סיום (Finish)</b> — הכונן יופיע מיד!</li>
+          </ol>
+          <div style="background:#020617;border:1px solid #1e293b;border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">או בשורה אחת ב-Win+R (הפעלה):</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <code style="flex:1;direction:ltr;text-align:left;font-size:12px;color:#7dd3fc;word-break:break-all;">${netUseCmd}</code>
+              <button class="btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${netUseCmd}'); toast('הפקודה הועתקה!', 'success')">📋 העתק</button>
+            </div>
+          </div>
+          <div style="text-align:left;">
+            <button class="btn-primary btn-sm" onclick="document.getElementById('webdavMountModal').remove()">סגור</button>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
     }
 
     async function openDriveInExplorer() {
