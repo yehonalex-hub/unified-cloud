@@ -936,8 +936,28 @@ app.get('/api/mount/download-script', async (req, res) => {
 
 // ==================== NATIVE WEBDAV SERVER (MOUNT WITHOUT DOWNLOADING ANY FILE) ====================
 const WEBDAV_PORT = 18081;
+const net = require('net');
 let webdavProcess = null;
 let webdavStarting = null;
+
+function waitForPort(port, timeoutMs = 5000) {
+  const start = Date.now();
+  return new Promise((resolve, reject) => {
+    const attempt = () => {
+      const sock = net.createConnection({ host: '127.0.0.1', port });
+      sock.once('connect', () => { sock.destroy(); resolve(); });
+      sock.once('error', () => {
+        sock.destroy();
+        if (Date.now() - start > timeoutMs) {
+          reject(new Error('WebDAV server did not start in time'));
+        } else {
+          setTimeout(attempt, 150);
+        }
+      });
+    };
+    attempt();
+  });
+}
 
 function ensureWebdavServer() {
   if (webdavProcess && !webdavProcess.killed) return Promise.resolve();
@@ -945,9 +965,17 @@ function ensureWebdavServer() {
 
   webdavStarting = new Promise(async (resolve, reject) => {
     try {
-      await rebuildUnion().catch(() => {});
+      const remotes = await listUserRemotes(UNION_NAME).catch(() => []);
+      let target = `${UNION_NAME}:`;
+      if (remotes.length > 0) {
+        await rebuildUnion().catch(() => {});
+      } else {
+        const emptyDir = path.join(os.tmpdir(), 'unified-cloud-empty');
+        fs.mkdirSync(emptyDir, { recursive: true });
+        target = emptyDir;
+      }
       const args = [
-        'serve', 'webdav', `${UNION_NAME}:`,
+        'serve', 'webdav', target,
         '--addr', `127.0.0.1:${WEBDAV_PORT}`,
         '--baseurl', '/webdav',
         '--vfs-cache-mode', 'writes',
@@ -961,8 +989,7 @@ function ensureWebdavServer() {
       proc.on('close', () => {
         if (webdavProcess === proc) webdavProcess = null;
       });
-      // Wait briefly for rclone serve webdav to bind
-      await new Promise(r => setTimeout(r, 900));
+      await waitForPort(WEBDAV_PORT, 6000);
       webdavStarting = null;
       resolve();
     } catch (err) {
